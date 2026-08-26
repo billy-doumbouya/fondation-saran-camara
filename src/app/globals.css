@@ -1,0 +1,182 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------
+   FSCPE Design System
+   Palette derived from the foundation logo:
+   - Green   (primary, dominant)   : growth, hope, CTAs
+   - Navy    (secondary)           : trust, institutional
+   - Gold    (accent, sparing use) : warmth, highlights
+--------------------------------------------------------- */
+:root {
+  --background: #fbfaf6;
+  --foreground: #1a2333;
+
+  --color-primary-50: #eefaf1;
+  --color-primary-100: #d6f2dd;
+  --color-primary-200: #ade4bc;
+  --color-primary-300: #7ccf93;
+  --color-primary-400: #4bb56d;
+  --color-primary-500: #2f9950;
+  --color-primary-600: #227a3f;
+  --color-primary-700: #1c6234;
+  --color-primary-800: #194e2c;
+  --color-primary-900: #154025;
+
+  --color-navy-50: #eef1f7;
+  --color-navy-100: #d3daea;
+  --color-navy-200: #a7b6d4;
+  --color-navy-300: #7690bd;
+  --color-navy-400: #4d6ba3;
+  --color-navy-500: #325086;
+  --color-navy-600: #223c69;
+  --color-navy-700: #1a2e54;
+  --color-navy-800: #16233f;
+  --color-navy-900: #101a2e;
+
+  --color-gold-50: #fdf8e9;
+  --color-gold-100: #faedc0;
+  --color-gold-200: #f4dc8a;
+  --color-gold-300: #edc853;
+  --color-gold-400: #e3b32c;
+  --color-gold-500: #d4a017;
+  --color-gold-600: #ab7d10;
+  --color-gold-700: #82600f;
+  --color-gold-800: #5c4611;
+  --color-gold-900: #3d2f0d;
+
+  --font-display: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-primary-50: var(--color-primary-50);
+  --color-primary-100: var(--color-primary-100);
+  --color-primary-200: var(--color-primary-200);
+  --color-primary-300: var(--color-primary-300);
+  --color-primary-400: var(--color-primary-400);
+  --color-primary-500: var(--color-primary-500);
+  --color-primary-600: var(--color-primary-600);
+  --color-primary-700: var(--color-primary-700);
+  --color-primary-800: var(--color-primary-800);
+  --color-primary-900: var(--color-primary-900);
+
+  --color-navy-50: var(--color-navy-50);
+  --color-navy-100: var(--color-navy-100);
+  --color-navy-200: var(--color-navy-200);
+  --color-navy-300: var(--color-navy-300);
+  --color-navy-400: var(--color-navy-400);
+  --color-navy-500: var(--color-navy-500);
+  --color-navy-600: var(--color-navy-600);
+  --color-navy-700: var(--color-navy-700);
+  --color-navy-800: var(--color-navy-800);
+  --color-navy-900: var(--color-navy-900);
+
+  --color-gold-50: var(--color-gold-50);
+  --color-gold-100: var(--color-gold-100);
+  --color-gold-200: var(--color-gold-200);
+  --color-gold-300: var(--color-gold-300);
+  --color-gold-400: var(--color-gold-400);
+  --color-gold-500: var(--color-gold-500);
+  --color-gold-600: var(--color-gold-600);
+  --color-gold-700: var(--color-gold-700);
+  --color-gold-800: var(--color-gold-800);
+  --color-gold-900: var(--color-gold-900);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+
+  --animate-fade-in: fade-in 0.6s ease-out both;
+  --animate-fade-in-up: fade-in-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade-in-down: fade-in-down 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-scale-in: scale-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-caret: caret-blink 1s step-end infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-marquee: marquee 30s linear infinite;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-in-down {
+    from { opacity: 0; transform: translateY(-24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.92); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes caret-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-body), Arial, Helvetica, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6, .font-display {
+  font-family: var(--font-display), var(--font-body), sans-serif;
+}
+
+::selection {
+  background: var(--color-primary-200);
+  color: var(--color-navy-900);
+}
+
+.container-app {
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .container-app {
+    padding-inline: 2rem;
+  }
+}
+/* 
+#nprogress .bar {
+  background: var(--color-primary-500) !important;
+  height: 3px !important;
+}
+#nprogress .peg {
+  box-shadow: 0 0 10px var(--color-primary-500), 0 0 5px var(--color-primary-500) !important;
+} */
+
+
+
+/* ... vos autres styles ... */
+
+/* Assure que NProgress est tout en haut (Top) */
+#nprogress .bar {
+  background: var(--color-primary-500) !important; /* Utilise votre couleur verte primaire */
+  position: fixed !important;
+  z-index: 9999 !important; /* Très élevé pour être au-dessus de la nav, etc. */
+  top: 0 !important; /* Aligné en haut */
+  left: 0 !important;
+  width: 100% !important;
+  height: 3px !important; /* Épaisseur de la barre */
+}
+
+/* Optionnel : Ajoute un effet d'ombre/lueur (Glow) */
+#nprogress .peg {
+  box-shadow: 0 0 10px var(--color-primary-500), 0 0 5px var(--color-primary-500) !important;
+}
