@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useLogoTapStore } from "@/lib/store";
 import Image from "next/image";
-import logoImage from "@/app/icon.jpeg";
 
 interface LogoProps {
   className?: string;
@@ -41,7 +40,7 @@ export default function Logo({ className, withWordmark = true, enableAdminTrigge
     >
       {/* logo */}
       <Image
-        src={logoImage}
+        src="/icon.jpeg"
         width={44}
         height={44}
         priority
