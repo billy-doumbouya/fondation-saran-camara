@@ -1,13 +1,13 @@
 "use client";
 
-import { useRef, Suspense } from "react";
+import { useRef, useState, Suspense } from "react";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { Lock, Loader2, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Lock, Loader2, ShieldCheck } from "lucide-react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Float, Sparkles } from "@react-three/drei";
 import * as THREE from "three";
@@ -61,6 +61,7 @@ function Background3DScene() {
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -153,12 +154,21 @@ function LoginForm() {
               <div className="relative mt-1.5">
                 <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-400" />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   autoFocus
                   {...register("password")}
-                  className="w-full rounded-xl border border-navy-200 bg-white py-3 pl-10 pr-4 text-sm outline-none transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                  className="w-full rounded-xl border border-navy-200 bg-white py-3 pl-10 pr-12 text-sm outline-none transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((visible) => !visible)}
+                  aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                  title={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-navy-400 transition-colors hover:text-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-200"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
               {errors.password && (
                 <p className="mt-1.5 text-xs text-red-600">{errors.password.message}</p>

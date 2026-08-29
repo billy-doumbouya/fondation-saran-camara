@@ -34,11 +34,14 @@ export default function DonateForm() {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error || "Impossible d'initier le paiement.");
       }
-      return res.json() as Promise<{ redirectUrl: string }>;
+      return res.json() as Promise<{ success: boolean; payment: { status?: string }; reference: string }>;
     },
     onSuccess: (data) => {
-      toast.success("Redirection vers le paiement sécurisé...");
-      if (data.redirectUrl) window.location.href = data.redirectUrl;
+      toast.success(
+        data.payment.status === "success"
+          ? "Votre don a été confirmé. Merci pour votre générosité."
+          : "Validez la demande de paiement sur votre téléphone."
+      );
     },
     onError: (err: Error) => {
       toast.error(err.message);

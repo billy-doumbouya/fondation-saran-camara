@@ -40,7 +40,7 @@ export default function Logo({ className, withWordmark = true, enableAdminTrigge
     >
       {/* logo */}
       <Image
-        src="/icon.jpeg"
+        src="/icon.png"
         width={44}
         height={44}
         priority

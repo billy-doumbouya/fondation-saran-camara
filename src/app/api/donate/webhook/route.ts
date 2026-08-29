@@ -18,17 +18,27 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const payload = JSON.parse(rawBody);
-    const reference: string | undefined = payload.reference || payload.data?.reference;
-    const status: string = payload.status || payload.data?.status || "unknown";
+    const payload = JSON.parse(rawBody) as {
+      type?: string;
+      reference?: string;
+      status?: string;
+      data?: { reference?: string; status?: string; id?: string };
+    };
+    const payment = payload.data || payload;
+    const reference = payment.reference;
+    const status = payment.status || "unknown";
 
     if (!reference) {
       return NextResponse.json({ error: "Référence manquante." }, { status: 400 });
     }
 
-    const normalizedStatus = ["success", "completed", "paid"].includes(status.toLowerCase())
+    const normalizedStatus = ["payment.success", "success", "completed", "paid"].includes(
+      (payload.type || status).toLowerCase()
+    )
       ? "success"
-      : ["failed", "cancelled", "declined"].includes(status.toLowerCase())
+      : ["payment.failed", "failed", "cancelled", "declined"].includes(
+          (payload.type || status).toLowerCase()
+        )
       ? "failed"
       : "pending";
 

@@ -1,5 +1,6 @@
-import { Newspaper, Quote, Users2, Image as ImageIcon, GraduationCap, CalendarDays, Mail } from "lucide-react";
 import { newsRepo, testimonialsRepo, teamRepo, galleryRepo, programsRepo, eventsRepo, contactRepo } from "@/lib/db/repo";
+import DashboardCharts from "@/components/admin/DashboardCharts";
+import DashboardOverview from "@/components/admin/DashboardOverview";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Tableau de bord" };
@@ -25,35 +26,35 @@ export default async function AdminDashboardPage() {
     ]);
 
   const stats = [
-    { icon: Newspaper, label: "Actualités", value: newsCount, href: "/admin/news" },
-    { icon: Quote, label: "Témoignages", value: testimonialsCount, href: "/admin/testimonials" },
-    { icon: Users2, label: "Membres de l'équipe", value: teamCount, href: "/admin/team" },
-    { icon: ImageIcon, label: "Photos en galerie", value: galleryCount, href: "/admin/gallery" },
-    { icon: GraduationCap, label: "Programmes", value: programsCount, href: "/admin/programs" },
-    { icon: CalendarDays, label: "Événements", value: eventsCount, href: "/admin/events" },
-    { icon: Mail, label: "Messages reçus", value: messagesCount, href: "#" },
+    { icon: "newspaper", label: "Actualités", value: newsCount, href: "/admin/news" },
+    { icon: "quote", label: "Témoignages", value: testimonialsCount, href: "/admin/testimonials" },
+    { icon: "users", label: "Membres de l'équipe", value: teamCount, href: "/admin/team" },
+    { icon: "image", label: "Photos en galerie", value: galleryCount, href: "/admin/gallery" },
+    { icon: "graduation", label: "Programmes", value: programsCount, href: "/admin/programs" },
+    { icon: "calendar", label: "Événements", value: eventsCount, href: "/admin/events" },
+    { icon: "mail", label: "Messages reçus", value: messagesCount, href: "#" },
+  ];
+
+  const chartData = [
+    { label: "Actualités", value: newsCount, color: "#227a3f" },
+    { label: "Programmes", value: programsCount, color: "#d4a017" },
+    { label: "Événements", value: eventsCount, color: "#325086" },
+    { label: "Équipe", value: teamCount, color: "#4bb56d" },
+    { label: "Galerie", value: galleryCount, color: "#e3b32c" },
+    { label: "Avis", value: testimonialsCount, color: "#7690bd" },
+  ];
+
+  const contentTotal = stats.reduce((sum, stat) => sum + stat.value, 0);
+  const quickActions = [
+    { label: "Publier une actualité", href: "/admin/news", icon: "newspaper" },
+    { label: "Ajouter un événement", href: "/admin/events", icon: "calendar" },
+    { label: "Gérer les programmes", href: "/admin/programs", icon: "graduation" },
   ];
 
   return (
-    <div>
-      <h1 className="font-display text-2xl font-bold text-navy-900">Tableau de bord</h1>
-      <p className="mt-1 text-navy-500">Vue d&apos;ensemble du contenu de la fondation.</p>
-
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((s) => (
-          <a
-            key={s.label}
-            href={s.href}
-            className="rounded-2xl border border-navy-100 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
-              <s.icon size={18} />
-            </div>
-            <p className="font-display mt-3 text-2xl font-bold text-navy-900">{s.value}</p>
-            <p className="mt-1 text-sm text-navy-500">{s.label}</p>
-          </a>
-        ))}
-      </div>
-    </div>
+    <>
+      <DashboardOverview stats={stats} quickActions={quickActions} contentTotal={contentTotal} />
+      <DashboardCharts data={chartData} />
+    </>
   );
 }

@@ -1,9 +1,33 @@
+"use client";
+
 import Link from "next/link";
 import { Mail, MapPin, Phone, Share2, Globe2, MessageCircle } from "lucide-react";
+import { toast } from "sonner";
 import Logo from "./Logo";
 import { BRAND, NAV_LINKS } from "@/lib/site-data";
 
 export default function Footer() {
+  const handleShare = async () => {
+    const shareData = {
+      title: BRAND.fullName,
+      text: BRAND.slogan,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Lien de la page copié.");
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      toast.error("Impossible de partager cette page.");
+    }
+  };
+
   return (
     <footer className="border-t border-navy-100 bg-navy-900 text-navy-100">
       <div className="container-app grid gap-10 py-14 md:grid-cols-4">
@@ -13,20 +37,21 @@ export default function Footer() {
           </div>
           <p className="mt-4 text-sm leading-relaxed text-navy-300">{BRAND.slogan}</p>
           <div className="mt-4 flex gap-3">
-            <a
-              href="#"
+            <button
+              type="button"
+              onClick={handleShare}
               aria-label="Réseaux sociaux"
               className="rounded-full bg-white/10 p-2 transition-colors hover:bg-primary-500"
             >
               <Share2 size={16} />
-            </a>
-            <a
-              href="#"
-              aria-label="Site web"
+            </button>
+            <Link
+              href="/"
+              aria-label="Accueil du site"
               className="rounded-full bg-white/10 p-2 transition-colors hover:bg-primary-500"
             >
               <Globe2 size={16} />
-            </a>
+            </Link>
           </div>
         </div>
 

@@ -21,6 +21,10 @@ export const metadata: Metadata = {
     default: `${BRAND.fullName} (${BRAND.acronym})`,
     template: `%s | ${BRAND.acronym}`,
   },
+ icons: {
+    icon: "/icon.png",
+    apple: "/icon.png"  
+  },
   description:
     "La Fondation Saran Camara pour l'Éducation et la Protection des Enfants scolarise, protège et accompagne les enfants orphelins et vulnérables de Guinée.",
   keywords: [

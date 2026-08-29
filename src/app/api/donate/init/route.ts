@@ -12,7 +12,6 @@ export async function POST(request: NextRequest) {
     const data = await donationSchema.validate(body, { stripUnknown: true });
 
     const reference = generateReference();
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || request.nextUrl.origin;
 
     await donationsRepo.create({
       reference,
@@ -25,18 +24,17 @@ export async function POST(request: NextRequest) {
       status: "pending",
     });
 
-    const { redirectUrl } = await initGeniusPayPayment({
+    const { payment, providerReference } = await initGeniusPayPayment({
       reference,
       amount: data.amount,
       currency: "GNF",
       customerName: data.donorName,
       customerEmail: data.donorEmail,
       customerPhone: data.donorPhone,
-      callbackUrl: `${siteUrl}/api/donate/webhook`,
-      redirectUrl: `${siteUrl}/don/merci?ref=${reference}`,
     });
 
-    return NextResponse.json({ redirectUrl, reference });
+    await donationsRepo.updateStatus(reference, "pending", { payment, providerReference });
+    return NextResponse.json({ success: true, payment, reference });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Impossible d'initier le paiement.";
     return NextResponse.json({ error: message }, { status: 400 });

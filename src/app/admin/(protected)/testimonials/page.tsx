@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "motion/react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -8,6 +9,7 @@ import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Loader2, Star } from "lucide-react";
 import DataTable, { type DataTableColumn } from "@/components/admin/DataTable";
 import Modal from "@/components/admin/Modal";
+import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import ImageUploader from "@/components/admin/ImageUploader";
 import { testimonialSchema, type TestimonialFormValues } from "@/lib/validations";
 import type { Testimonial } from "@/lib/db/schema";
@@ -24,6 +26,7 @@ export default function AdminTestimonialsPage() {
   const { data: items = [], isLoading } = useQuery({ queryKey: ["admin-testimonials"], queryFn: fetchTestimonials });
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Testimonial | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const {
     register,
@@ -116,7 +119,7 @@ export default function AdminTestimonialsPage() {
           </button>
           <button
             type="button"
-            onClick={() => confirm("Supprimer ce témoignage ?") && deleteMutation.mutate(r.id)}
+            onClick={() => setDeleteId(r.id)}
             className="rounded-lg p-1.5 text-red-500 hover:bg-red-50"
           >
             <Trash2 size={15} />
@@ -128,22 +131,25 @@ export default function AdminTestimonialsPage() {
   ];
 
   return (
-    <div>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold text-navy-900">Témoignages</h1>
-          <p className="mt-1 text-navy-500">Gérez les témoignages affichés sur le site.</p>
+    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: "easeOut" }} className="space-y-6">
+      <div className="rounded-[28px] border border-navy-100 bg-white p-5 shadow-[0_18px_45px_rgba(16,26,46,0.06)] sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-600">Avis</p>
+            <h1 className="font-display mt-2 text-2xl font-bold text-navy-900">Témoignages</h1>
+            <p className="mt-1 text-sm text-navy-500">Gérez les témoignages affichés sur le site.</p>
+          </div>
+          <button
+            type="button"
+            onClick={openCreate}
+            className="flex items-center justify-center gap-2 rounded-full bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_12px_25px_rgba(34,122,63,0.22)] transition-all hover:-translate-y-0.5 hover:bg-primary-700"
+          >
+            <Plus size={16} /> Nouveau témoignage
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={openCreate}
-          className="flex items-center gap-2 rounded-full bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-700"
-        >
-          <Plus size={16} /> Nouveau témoignage
-        </button>
       </div>
 
-      <div className="mt-6">
+      <div>
         <DataTable columns={columns} rows={items} isLoading={isLoading} keyField="id" />
       </div>
 
@@ -190,6 +196,7 @@ export default function AdminTestimonialsPage() {
           </button>
         </form>
       </Modal>
-    </div>
+      <ConfirmationModal open={deleteId !== null} onClose={() => setDeleteId(null)} onConfirm={() => { if (deleteId !== null) deleteMutation.mutate(deleteId); setDeleteId(null); }} title="Supprimer ce témoignage ?" description="Cette action est définitive. Le témoignage sera retiré du site." confirmLabel="Supprimer" destructive isPending={deleteMutation.isPending} />
+    </motion.div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -17,6 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import Logo from "@/components/site/Logo";
+import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import { useAdminUIStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +36,7 @@ export default function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { sidebarOpen, setSidebarOpen } = useAdminUIStore();
+  const [logoutOpen, setLogoutOpen] = useState(false);
 
   const logout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -46,6 +49,7 @@ export default function AdminSidebar() {
     <div className="flex h-full flex-col">
       <div className="border-b border-navy-100 p-5">
         <Logo />
+        <p className="mt-4 rounded-xl bg-primary-50 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-primary-700">Console de pilotage</p>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {LINKS.map((link) => {
@@ -56,8 +60,8 @@ export default function AdminSidebar() {
               href={link.href}
               onClick={() => setSidebarOpen(false)}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-colors",
-                active ? "bg-primary-600 text-white" : "text-navy-600 hover:bg-primary-50"
+                "group flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all",
+                active ? "bg-primary-600 text-white shadow-md shadow-primary-600/20" : "text-navy-600 hover:translate-x-0.5 hover:bg-primary-50"
               )}
             >
               <link.icon size={17} />
@@ -69,7 +73,7 @@ export default function AdminSidebar() {
       <div className="border-t border-navy-100 p-3">
         <button
           type="button"
-          onClick={logout}
+          onClick={() => setLogoutOpen(true)}
           className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
         >
           <LogOut size={17} />
@@ -81,7 +85,9 @@ export default function AdminSidebar() {
 
   return (
     <>
-      <aside className="hidden w-64 shrink-0 border-r border-navy-100 bg-white lg:block">{content}</aside>
+      <aside className="fixed left-0 top-0 hidden h-screen w-64 shrink-0 border-r border-navy-100/80 bg-white/95 shadow-[8px_0_30px_rgba(16,26,46,0.04)] backdrop-blur-md lg:block">
+        <div className="h-full overflow-y-auto">{content}</div>
+      </aside>
 
       <button
         type="button"
@@ -122,6 +128,14 @@ export default function AdminSidebar() {
           </>
         )}
       </AnimatePresence>
+      <ConfirmationModal
+        open={logoutOpen}
+        onClose={() => setLogoutOpen(false)}
+        onConfirm={logout}
+        title="Se déconnecter ?"
+        description="Votre session d’administration sera fermée sur cet appareil."
+        confirmLabel="Se déconnecter"
+      />
     </>
   );
 }

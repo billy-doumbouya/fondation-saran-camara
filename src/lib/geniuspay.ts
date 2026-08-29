@@ -1,21 +1,10 @@
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 
 /**
- * Intégration GeniusPay (geniuspay.ci) — PSP couvrant le Mobile Money
- * (Orange, MTN, Wave) et les cartes bancaires en Afrique de l'Ouest.
+ * Intégration GeniusPay V3 — paiement direct Mobile Money.
  *
- * ⚠️ IMPORTANT : au moment de la génération de ce projet, GeniusPay est en
- * liste d'attente publique (onboarding.geniuspay.ci) et règle en XOF, une
- * devise différente du GNF (franc guinéen) utilisé par la fondation.
- * Avant la mise en production :
- *   1. Confirmez auprès de GeniusPay que la collecte fonctionne pour un
- *      bénéficiaire basé en Guinée (hors zone CFA) et quelle devise
- *      afficher au donateur.
- *   2. Récupérez vos clés API réelles et le schéma exact des requêtes
- *      dans leur documentation officielle (elle peut différer légèrement
- *      de l'abstraction ci-dessous, écrite pour être facile à adapter).
- *   3. Renseignez GENIUSPAY_SECRET_KEY, GENIUSPAY_PUBLIC_KEY et
- *      GENIUSPAY_WEBHOOK_SECRET dans .env.local.
+ * Le guide fourni indique que les clés doivent rester côté serveur et être
+ * transmises via X-API-Key/X-API-Secret.
  */
 
 interface InitPaymentParams {
@@ -25,42 +14,46 @@ interface InitPaymentParams {
   customerName: string;
   customerEmail: string;
   customerPhone: string;
-  callbackUrl: string;
-  redirectUrl: string;
 }
 
 interface InitPaymentResult {
-  redirectUrl: string;
+  payment: Record<string, unknown>;
   providerReference?: string;
 }
 
-const GENIUSPAY_API_BASE = process.env.GENIUSPAY_API_BASE_URL || "https://api.geniuspay.ci/v1";
+const GENIUSPAY_API_BASE =
+  process.env.GENIUSPAY_API_BASE_URL || "https://labpay.genius.ci/api/v1/merchant";
 
 export async function initGeniusPayPayment(params: InitPaymentParams): Promise<InitPaymentResult> {
+  const publicKey = process.env.GENIUSPAY_PUBLIC_KEY;
   const secretKey = process.env.GENIUSPAY_SECRET_KEY;
-  if (!secretKey) {
+  if (!publicKey || !secretKey) {
     throw new Error(
-      "GENIUSPAY_SECRET_KEY n'est pas configuré. Ajoutez vos clés GeniusPay dans .env.local une fois votre accès validé."
+      "GENIUSPAY_PUBLIC_KEY et GENIUSPAY_SECRET_KEY doivent être configurées dans .env.local."
     );
   }
 
-  const res = await fetch(`${GENIUSPAY_API_BASE}/payments/initialize`, {
+  const res = await fetch(`${GENIUSPAY_API_BASE}/payments`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${secretKey}`,
+      "X-API-Key": publicKey,
+      "X-API-Secret": secretKey,
     },
     body: JSON.stringify({
-      reference: params.reference,
       amount: params.amount,
       currency: params.currency,
+      payment_method: process.env.GENIUSPAY_PAYMENT_METHOD || "pawapay",
+      ...(process.env.GENIUSPAY_MMO_PROVIDER
+        ? { mmo_provider: process.env.GENIUSPAY_MMO_PROVIDER }
+        : {}),
       customer: {
         name: params.customerName,
         email: params.customerEmail,
         phone: params.customerPhone,
+        country: process.env.GENIUSPAY_COUNTRY || "GN",
       },
-      callback_url: params.callbackUrl,
-      redirect_url: params.redirectUrl,
+      reference: params.reference,
     }),
   });
 
@@ -69,21 +62,21 @@ export async function initGeniusPayPayment(params: InitPaymentParams): Promise<I
     throw new Error(`GeniusPay a refusé la demande de paiement (${res.status}): ${body}`);
   }
 
-  const data = await res.json();
-  const redirectUrl = data.redirect_url || data.checkout_url || data.data?.checkout_url;
-  if (!redirectUrl) {
-    throw new Error("Réponse GeniusPay inattendue : URL de paiement absente.");
+  const data = (await res.json()) as Record<string, unknown>;
+  const payment = data.data && typeof data.data === "object" ? data.data : data;
+  const paymentRecord = payment as Record<string, unknown>;
+  if (!paymentRecord.id && !paymentRecord.reference) {
+    throw new Error("Réponse GeniusPay inattendue : identifiant de paiement absent.");
   }
 
-  return { redirectUrl, providerReference: data.id || data.data?.id };
+  return { payment: paymentRecord, providerReference: String(paymentRecord.id || "") || undefined };
 }
 
-/** Vérifie la signature du webhook GeniusPay (à ajuster selon leur doc officielle). */
+/** Vérifie la signature HMAC-SHA256 du corps brut du webhook. */
 export function isValidGeniusPaySignature(rawBody: string, signatureHeader: string | null): boolean {
   const secret = process.env.GENIUSPAY_WEBHOOK_SECRET;
   if (!secret || !signatureHeader) return false;
-  // Placeholder HMAC comparison — remplacez par l'algorithme exact documenté
-  // par GeniusPay (souvent HMAC-SHA256 du corps brut avec le webhook secret).
-  const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
-  return expected === signatureHeader;
+  const expected = Buffer.from(createHmac("sha256", secret).update(rawBody).digest("hex"), "utf8");
+  const received = Buffer.from(signatureHeader, "utf8");
+  return received.length === expected.length && timingSafeEqual(received, expected);
 }
