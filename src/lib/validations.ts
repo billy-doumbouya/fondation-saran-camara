@@ -31,6 +31,34 @@ export const loginSchema = yup.object({
 });
 export type LoginFormValues = yup.InferType<typeof loginSchema>;
 
+export const siteSettingsSchema = yup.object({
+  name: yup.string().trim().min(2).max(200).required("Nom requis"),
+  fullName: yup.string().trim().min(2).max(250).required("Nom complet requis"),
+  acronym: yup.string().trim().min(2).max(20).required("Sigle requis"),
+  slogan: yup.string().trim().min(2).max(250).required("Slogan requis"),
+  founderName: yup.string().trim().min(2).max(150).required("Nom du fondateur requis"),
+  address: yup.string().trim().min(2).max(250).required("Adresse requise"),
+  phone: yup.string().trim().min(6).max(50).required("Téléphone requis"),
+  phoneSecondary: yup.string().trim().max(50).nullable().optional(),
+  email: yup.string().trim().email("E-mail invalide").required("E-mail requis"),
+  quote: yup.string().trim().min(10).max(500).required("Citation requise"),
+  whatsappNumber: yup.string().trim().min(6).max(50).required("WhatsApp requis"),
+  whatsappDisplay: yup.string().trim().min(6).max(50).required("Affichage WhatsApp requis"),
+  heroVideoUrl: yup.string().trim().url("URL vidéo invalide").nullable().optional(),
+  heroPosterUrl: yup.string().trim().url("URL poster invalide").nullable().optional(),
+});
+export type SiteSettingsFormValues = yup.InferType<typeof siteSettingsSchema>;
+
+export const adminPasswordUpdateSchema = yup.object({
+  currentPassword: yup.string().min(1, "Mot de passe actuel requis").required("Mot de passe actuel requis"),
+  newPassword: yup.string().min(8, "Le nouveau mot de passe doit contenir au moins 8 caractères").required("Nouveau mot de passe requis"),
+  confirmPassword: yup
+    .string()
+    .oneOf([yup.ref("newPassword")], "Les mots de passe ne correspondent pas")
+    .required("Confirmation requise"),
+});
+export type AdminPasswordUpdateFormValues = yup.InferType<typeof adminPasswordUpdateSchema>;
+
 export const newsSchema = yup.object({
   title: yup.string().trim().min(3).max(250).required("Titre requis"),
   slug: yup

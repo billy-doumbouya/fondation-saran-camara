@@ -25,6 +25,26 @@ export default async function AdminDashboardPage() {
       safeCount(contactRepo.listAll()),
     ]);
 
+  const resolvedCounts = {
+    newsCount: Number.isFinite(newsCount) ? newsCount : 0,
+    testimonialsCount: Number.isFinite(testimonialsCount) ? testimonialsCount : 0,
+    teamCount: Number.isFinite(teamCount) ? teamCount : 0,
+    galleryCount: Number.isFinite(galleryCount) ? galleryCount : 0,
+    programsCount: Number.isFinite(programsCount) ? programsCount : 0,
+    eventsCount: Number.isFinite(eventsCount) ? eventsCount : 0,
+    messagesCount: Number.isFinite(messagesCount) ? messagesCount : 0,
+  };
+
+  const {
+    newsCount: safeNewsCount,
+    testimonialsCount: safeTestimonialsCount,
+    teamCount: safeTeamCount,
+    galleryCount: safeGalleryCount,
+    programsCount: safeProgramsCount,
+    eventsCount: safeEventsCount,
+    messagesCount: safeMessagesCount,
+  } = resolvedCounts;
+
   const stats = [
     { icon: "newspaper", label: "Actualités", value: newsCount, href: "/admin/news" },
     { icon: "quote", label: "Témoignages", value: testimonialsCount, href: "/admin/testimonials" },
@@ -32,7 +52,7 @@ export default async function AdminDashboardPage() {
     { icon: "image", label: "Photos en galerie", value: galleryCount, href: "/admin/gallery" },
     { icon: "graduation", label: "Programmes", value: programsCount, href: "/admin/programs" },
     { icon: "calendar", label: "Événements", value: eventsCount, href: "/admin/events" },
-    { icon: "mail", label: "Messages reçus", value: messagesCount, href: "#" },
+    { icon: "mail", label: "Messages reçus", value: messagesCount, href: "/admin/messages" },
   ];
 
   const chartData = [

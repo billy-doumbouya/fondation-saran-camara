@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       donorEmail: data.donorEmail,
       donorPhone: data.donorPhone,
       amount: data.amount,
-      currency: "GNF",
+      currency: "GNF", // devise réelle du don, gardée en base
       provider: "geniuspay",
       status: "pending",
     });
@@ -33,10 +33,25 @@ export async function POST(request: NextRequest) {
       customerPhone: data.donorPhone,
     });
 
-    await donationsRepo.updateStatus(reference, "pending", { payment, providerReference });
-    return NextResponse.json({ success: true, payment, reference });
+    await donationsRepo.updateStatus(reference, "pending", {
+      payment,
+      providerReference,
+    });
+
+    return NextResponse.json({
+      success: true,
+      reference,
+      checkoutUrl: payment.checkoutUrl || payment.paymentUrl,
+      payment,
+    });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Impossible d'initier le paiement.";
-    return NextResponse.json({ error: message }, { status: 400 });
+    const message =
+      err instanceof Error ? err.message : "Impossible d'initier le paiement.";
+    const status = /GeniusPay|n[’']a pas répondu|timeout|indisponible/i.test(
+      message,
+    )
+      ? 502
+      : 400;
+    return NextResponse.json({ error: message }, { status });
   }
 }

@@ -1,6 +1,7 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
+import { settingsRepo } from "@/lib/db/repo";
 
 const SESSION_COOKIE = "fscpe_admin_session";
 const SESSION_DURATION_SECONDS = 60 * 60 * 8; // 8h
@@ -15,15 +16,26 @@ function getSecret(): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
-/** Vérifie un mot de passe en clair contre le hash stocké (ADMIN_PASSWORD_HASH). */
-export async function verifyAdminPassword(plainPassword: string): Promise<boolean> {
-  const hash = process.env.ADMIN_PASSWORD_HASH;
-  if (!hash) {
+async function getAdminPasswordHash(): Promise<string> {
+  const dbHash = await settingsRepo.get("admin_password_hash", process.env.ADMIN_PASSWORD_HASH ?? null);
+  if (!dbHash) {
     throw new Error(
       "ADMIN_PASSWORD_HASH n'est pas défini. Générez-le avec `npm run hash-password -- \"votre mot de passe\"`."
     );
   }
+  return dbHash;
+}
+
+/** Vérifie un mot de passe en clair contre le hash stocké dans les settings DBA ou l'env fallback. */
+export async function verifyAdminPassword(plainPassword: string): Promise<boolean> {
+  const hash = await getAdminPasswordHash();
   return bcrypt.compare(plainPassword, hash);
+}
+
+export async function setAdminPasswordHash(newPlainPassword: string): Promise<string> {
+  const hash = await bcrypt.hash(newPlainPassword, 12);
+  await settingsRepo.set("admin_password_hash", hash);
+  return hash;
 }
 
 export async function createSessionToken(): Promise<string> {

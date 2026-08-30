@@ -14,6 +14,7 @@ import {
   CalendarDays,
   LogOut,
   Menu,
+  ShieldCheck,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -30,6 +31,8 @@ const LINKS = [
   { href: "/admin/gallery", label: "Galerie photos", icon: ImageIcon },
   { href: "/admin/programs", label: "Programmes / Projets", icon: GraduationCap },
   { href: "/admin/events", label: "Agenda / Événements", icon: CalendarDays },
+  { href: "/admin/messages", label: "Messages reçus", icon: LogOut },
+  { href: "/admin/settings", label: "Paramètres", icon: ShieldCheck },
 ];
 
 export default function AdminSidebar() {

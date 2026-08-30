@@ -6,41 +6,51 @@ export const runtime = "nodejs";
 
 /**
  * Webhook GeniusPay : met à jour le statut du don.
- * ⚠️ Adaptez le nom du header de signature et le format du payload une fois
- * la documentation officielle de production consultée.
+ * Headers officiels : X-Webhook-Signature, X-Webhook-Timestamp, X-Webhook-Event.
  */
 export async function POST(request: NextRequest) {
   const rawBody = await request.text();
-  const signature = request.headers.get("x-geniuspay-signature");
+  const signature = request.headers.get("x-webhook-signature");
+  const timestamp = request.headers.get("x-webhook-timestamp");
+  const eventHeader = request.headers.get("x-webhook-event");
 
-  if (!isValidGeniusPaySignature(rawBody, signature)) {
-    return NextResponse.json({ error: "Signature invalide." }, { status: 401 });
+  if (!process.env.GENIUSPAY_WEBHOOK_SECRET) {
+    return NextResponse.json(
+      { error: "GENIUSPAY_WEBHOOK_SECRET non configuré dans l'environnement." },
+      { status: 501 }
+    );
+  }
+
+  if (!isValidGeniusPaySignature(rawBody, signature, timestamp)) {
+    return NextResponse.json({ error: "Signature invalide ou expirée." }, { status: 401 });
   }
 
   try {
     const payload = JSON.parse(rawBody) as {
-      type?: string;
-      reference?: string;
-      status?: string;
-      data?: { reference?: string; status?: string; id?: string };
+      event?: string;
+      data?: {
+        reference?: string;
+        status?: string;
+        metadata?: Record<string, unknown>;
+      };
     };
-    const payment = payload.data || payload;
-    const reference = payment.reference;
-    const status = payment.status || "unknown";
+
+    const eventType = (eventHeader || payload.event || "").toLowerCase();
+    const reference =
+      (payload.data?.metadata?.internal_reference as string | undefined) || payload.data?.reference;
+    const status = (payload.data?.status || "").toLowerCase();
 
     if (!reference) {
       return NextResponse.json({ error: "Référence manquante." }, { status: 400 });
     }
 
-    const normalizedStatus = ["payment.success", "success", "completed", "paid"].includes(
-      (payload.type || status).toLowerCase()
-    )
-      ? "success"
-      : ["payment.failed", "failed", "cancelled", "declined"].includes(
-          (payload.type || status).toLowerCase()
-        )
-      ? "failed"
-      : "pending";
+    const normalizedStatus =
+      eventType === "payment.success" || status === "completed"
+        ? "success"
+        : ["payment.failed", "payment.cancelled", "payment.expired"].includes(eventType) ||
+          ["failed", "cancelled", "expired"].includes(status)
+        ? "failed"
+        : "pending";
 
     await donationsRepo.updateStatus(reference, normalizedStatus, payload);
     return NextResponse.json({ ok: true });

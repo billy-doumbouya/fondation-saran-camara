@@ -30,7 +30,7 @@ export const NAV_LINKS: NavLink[] = [
   { label: "Contact", href: "/contact" },
 ];
 
-export const BRAND = {
+export const DEFAULT_BRAND = {
   name: "Fondation Saran Camara",
   fullName: "Fondation Saran Camara pour l'Éducation et la Protection des Enfants",
   acronym: "FSCPE",
@@ -43,6 +43,26 @@ export const BRAND = {
   quote: "Offrir une éducation à un orphelin, c'est lui donner espoir d'un avenir meilleur",
   whatsappNumber: "224628532214", // format international sans "+", pour les liens wa.me
   whatsappDisplay: "+224 628 53 22 14",
+  heroVideoUrl: "",
+  heroPosterUrl: "",
+} as const;
+
+export const BRAND = { ...DEFAULT_BRAND };
+export type BrandSettings = {
+  name: string;
+  fullName: string;
+  acronym: string;
+  slogan: string;
+  founderName: string;
+  address: string;
+  phone: string;
+  phoneSecondary?: string | null;
+  email: string;
+  quote: string;
+  whatsappNumber: string;
+  whatsappDisplay: string;
+  heroVideoUrl?: string | null;
+  heroPosterUrl?: string | null;
 };
 
 export const HERO_TYPING_WORDS = [

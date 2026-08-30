@@ -12,7 +12,7 @@ export async function GET() {
     }
 
     const [pendingMessages, upcomingEvents, unpublishedNews, unpublishedPrograms, unpublishedTestimonials] = await Promise.all([
-      contactRepo.listAll(),
+      contactRepo.listUnread(),
       eventsRepo.listAll(),
       newsRepo.listAll(),
       programsRepo.listAll(),

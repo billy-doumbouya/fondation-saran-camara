@@ -105,6 +105,8 @@ export const contactRepo = {
   create: (data: { name: string; email: string; phone?: string | null; subject?: string | null; message: string }) =>
     db.insert(contactMessages).values(data).returning(),
   listAll: () => db.select().from(contactMessages).orderBy(desc(contactMessages.createdAt)),
+  listUnread: () =>
+    db.select().from(contactMessages).where(eq(contactMessages.read, false)).orderBy(desc(contactMessages.createdAt)),
   markRead: (id: number) => db.update(contactMessages).set({ read: true }).where(eq(contactMessages.id, id)),
 };
 
@@ -122,8 +124,13 @@ export const donationsRepo = {
 
 /* -------------------------- SETTINGS -------------------------- */
 export const settingsRepo = {
-  get: (key: string) =>
-    db.select().from(settings).where(eq(settings.key, key)).limit(1).then((r) => r[0]?.value ?? null),
+  get: (key: string, fallback: string | null = null) =>
+    db
+      .select()
+      .from(settings)
+      .where(eq(settings.key, key))
+      .limit(1)
+      .then((r) => r[0]?.value ?? fallback),
   set: (key: string, value: string) =>
     db
       .insert(settings)

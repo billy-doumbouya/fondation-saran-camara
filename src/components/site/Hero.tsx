@@ -86,7 +86,7 @@ function LightSweep({ reduceMotion }: { reduceMotion: boolean }) {
   return (
     <motion.div
       aria-hidden
-      className="pointer-events-none absolute inset-y-0 z-[6] w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/10 to-transparent mix-blend-soft-light"
+      className="pointer-events-none absolute inset-y-0 z-6 w-1/3 -skew-x-12 bg-linear-to-r from-transparent via-white/10 to-transparent mix-blend-soft-light"
       initial={{ left: "-40%" }}
       animate={{ left: ["-40%", "120%"] }}
       transition={{ duration: 7, repeat: Infinity, repeatDelay: 5, ease: "easeInOut" }}
@@ -100,7 +100,7 @@ function LightSweep({ reduceMotion }: { reduceMotion: boolean }) {
 // ==========================================
 function FilmGrain() {
   return (
-    <svg aria-hidden className="pointer-events-none absolute inset-0 z-[7] h-full w-full opacity-[0.05] mix-blend-overlay">
+    <svg aria-hidden className="pointer-events-none absolute inset-0 z-7 h-full w-full opacity-[0.05] mix-blend-overlay">
       <filter id="hero-grain">
         <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" />
       </filter>
@@ -125,7 +125,7 @@ function FloatingOrbs({ reduceMotion }: { reduceMotion: boolean }) {
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        className="pointer-events-none absolute left-[-4rem] bottom-10 h-64 w-64 rounded-full bg-[#e3b32c]/20 blur-3xl"
+        className="pointer-events-none absolute -left-16 bottom-10 h-64 w-64 rounded-full bg-[#e3b32c]/20 blur-3xl"
         animate={
           reduceMotion
             ? undefined
@@ -147,7 +147,7 @@ function FloatingOrbs({ reduceMotion }: { reduceMotion: boolean }) {
 // ==========================================
 function HeroWaveDivider() {
   return (
-    <div className="absolute inset-x-0 bottom-0 z-20 leading-[0]">
+    <div className="absolute inset-x-0 bottom-0 z-20 leading-0">
       <svg
         viewBox="0 0 1440 90"
         className="h-14 w-full sm:h-20"
@@ -237,12 +237,12 @@ export default function Hero({ videoUrl, posterUrl }: HeroProps) {
 
         {/* Fallback si pas de vidéo / échec de chargement */}
         {videoFailed && (
-          <div className="h-full w-full bg-gradient-to-br from-navy-900 via-navy-800 to-primary-900" />
+          <div className="h-full w-full bg-linear-to-br from-navy-900 via-navy-800 to-primary-900" />
         )}
 
         {/* Dégradés de lisibilité — teintés à l'identité de la fondation */}
-        <div className="absolute inset-0 bg-gradient-to-t from-navy-900 via-navy-900/75 to-navy-900/35" />
-        <div className="absolute inset-0 bg-gradient-to-r from-navy-900/85 via-navy-900/20 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-navy-900 via-navy-900/75 to-navy-900/35" />
+        <div className="absolute inset-0 bg-linear-to-r from-navy-900/85 via-navy-900/20 to-transparent" />
         <div className="absolute inset-0 bg-primary-900/10 mix-blend-multiply" />
 
         {/* Rayon de lumière signature */}
@@ -253,7 +253,7 @@ export default function Hero({ videoUrl, posterUrl }: HeroProps) {
       <FilmGrain />
 
       {/* Poussière de craie (remplace l'overlay Three.js) */}
-      <div className="absolute inset-0 z-[5]">
+      <div className="absolute inset-0 z-5">
         <ChalkDust reduceMotion={reduceMotion} />
       </div>
 

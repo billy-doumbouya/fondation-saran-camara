@@ -16,10 +16,10 @@ import {
   programsRepo,
   newsRepo,
   testimonialsRepo,
-  settingsRepo,
   partnersRepo,
 } from "@/lib/db/repo";
 import { BRAND } from "@/lib/site-data";
+import { getSiteSettings } from "@/lib/site-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -55,15 +55,16 @@ async function safe<T>(promise: Promise<T>, fallback: T): Promise<T> {
 }
 
 export default async function HomePage() {
-  const [heroVideoUrl, heroPosterUrl, programs, news, testimonials, partners] =
-    await Promise.all([
-      safe(settingsRepo.get("hero_video_url"), null),
-      safe(settingsRepo.get("hero_poster_url"), null),
-      safe(programsRepo.listPublished(), []),
-      safe(newsRepo.listPublished(), []),
-      safe(testimonialsRepo.listPublished(), []),
-      safe(partnersRepo.listAll(), []),
-    ]);
+  const [siteSettings, programs, news, testimonials, partners] = await Promise.all([
+    getSiteSettings(),
+    safe(programsRepo.listPublished(), []),
+    safe(newsRepo.listPublished(), []),
+    safe(testimonialsRepo.listPublished(), []),
+    safe(partnersRepo.listAll(), []),
+  ]);
+
+  const heroVideoUrl = siteSettings.heroVideoUrl || null;
+  const heroPosterUrl = siteSettings.heroPosterUrl || null;
 
   return (
     <>
@@ -135,10 +136,10 @@ export default async function HomePage() {
         <AnimatedSection direction="fade">
           <blockquote className="mx-auto max-w-3xl text-center">
             <p className="font-display text-2xl font-semibold text-navy-800 sm:text-3xl sm:leading-tight">
-              &ldquo;{BRAND.quote}&rdquo;
+              &ldquo;{siteSettings.quote || BRAND.quote}&rdquo;
             </p>
             <footer className="mt-6 text-sm font-medium tracking-wide text-primary-600">
-              — {BRAND.founderName}, Fondatrice
+              — {siteSettings.founderName || BRAND.founderName}, Fondatrice
             </footer>
           </blockquote>
         </AnimatedSection>
@@ -195,7 +196,7 @@ export default async function HomePage() {
               Ils nous soutiennent
             </p>
             
-            <div className="relative mt-8 flex w-full overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+            <div className="relative mt-8 flex w-full overflow-hidden mask-[linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
               <div className="flex min-w-full shrink-0 animate-marquee items-center justify-around gap-12">
                 {partners.map((p) => (
                   <span
@@ -224,7 +225,7 @@ export default async function HomePage() {
       )}
 
       {/* Call To Action */}
-      <section className="bg-gradient-to-r from-primary-600 to-primary-700 py-16 text-white shadow-inner">
+      <section className="bg-linear-to-r from-primary-600 to-primary-700 py-16 text-white shadow-inner">
         <div className="container-app flex flex-col items-center justify-between gap-6 text-center sm:flex-row sm:text-left">
           <div>
             <h2 className="font-display text-2xl font-bold sm:text-3xl">
