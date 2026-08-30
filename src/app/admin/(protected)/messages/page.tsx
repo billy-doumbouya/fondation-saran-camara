@@ -55,10 +55,10 @@ export default function AdminMessagesPage() {
       render: (row) => (
         <span
           className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-            row.read ? "bg-primary-100 text-primary-700" : "bg-gold-50 text-gold-700"
+            row.isRead ? "bg-primary-100 text-primary-700" : "bg-gold-50 text-gold-700"
           }`}
         >
-          {row.read ? "Lu" : "Nouveau"}
+          {row.isRead ? "Lu" : "Nouveau"}
         </span>
       ),
     },
@@ -85,7 +85,7 @@ export default function AdminMessagesPage() {
             <h1 className="font-display mt-2 text-2xl font-bold text-navy-900">Messages reçus</h1>
           </div>
           <div className="inline-flex items-center gap-2 rounded-full bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-700">
-            <Mail size={16} /> {sortedItems.filter((item) => !item.read).length} non lus
+            <Mail size={16} /> {sortedItems.filter((item) => !item.isRead).length} non lus
           </div>
         </div>
       </div>
@@ -105,7 +105,7 @@ export default function AdminMessagesPage() {
                   <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary-600">Message</p>
                   <h2 className="font-display mt-1 text-xl font-semibold text-navy-900">{selectedMessage.subject || "Sans objet"}</h2>
                 </div>
-                {!selectedMessage.read && (
+                {!selectedMessage.isRead && (
                   <button
                     type="button"
                     onClick={() => markReadMutation.mutate(selectedMessage.id)}

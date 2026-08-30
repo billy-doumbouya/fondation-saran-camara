@@ -105,7 +105,7 @@ export const contactMessages = pgTable("contact_messages", {
   phone: varchar("phone", { length: 50 }),
   subject: varchar("subject", { length: 250 }),
   message: text("message").notNull(),
-  read: boolean("read").notNull().default(false),
+  isRead: boolean("is_read").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

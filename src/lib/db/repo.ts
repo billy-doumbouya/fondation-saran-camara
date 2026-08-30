@@ -103,11 +103,11 @@ export const partnersRepo = {
 /* ---------------------- CONTACT FORM ---------------------- */
 export const contactRepo = {
   create: (data: { name: string; email: string; phone?: string | null; subject?: string | null; message: string }) =>
-    db.insert(contactMessages).values(data).returning(),
+    db.insert(contactMessages).values({ ...data, isRead: false }).returning(),
   listAll: () => db.select().from(contactMessages).orderBy(desc(contactMessages.createdAt)),
   listUnread: () =>
-    db.select().from(contactMessages).where(eq(contactMessages.read, false)).orderBy(desc(contactMessages.createdAt)),
-  markRead: (id: number) => db.update(contactMessages).set({ read: true }).where(eq(contactMessages.id, id)),
+    db.select().from(contactMessages).where(eq(contactMessages.isRead, false)).orderBy(desc(contactMessages.createdAt)),
+  markRead: (id: number) => db.update(contactMessages).set({ isRead: true }).where(eq(contactMessages.id, id)),
 };
 
 /* -------------------------- DONATIONS -------------------------- */

@@ -97,7 +97,7 @@ async function main() {
     sql`INSERT INTO events (title, description, location, start_at, end_at, published, created_at)
       SELECT 'Forum citoyen sur l’éducation', 'Rencontre avec les parents et partenaires pour renforcer l’accès à l’école.', 'Conakry', NOW() + INTERVAL '7 days', NOW() + INTERVAL '7 days' + INTERVAL '3 hours', true, NOW()
       WHERE NOT EXISTS (SELECT 1 FROM events WHERE title = 'Forum citoyen sur l’éducation');`,
-    sql`INSERT INTO contact_messages (name, email, phone, subject, message, read, created_at)
+    sql`INSERT INTO contact_messages (name, email, phone, subject, message, is_read, created_at)
       SELECT 'Mamadou Bah', 'mamadou@example.com', '+224 600 00 00 00', 'Demande de partenariat', 'Bonjour, nous souhaitons nous associer à vos actions.', false, NOW()
       WHERE NOT EXISTS (SELECT 1 FROM contact_messages WHERE email = 'mamadou@example.com');`,
   ];
