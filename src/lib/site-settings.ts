@@ -36,16 +36,21 @@ export type SiteSettings = {
 };
 
 export async function getSiteSettings(): Promise<SiteSettings> {
-  const entries = await Promise.all(
-    (Object.entries(SITE_SETTINGS_KEYS) as Array<[keyof typeof DEFAULT_BRAND, string]>).map(async ([key, dbKey]) => {
-      const value = await settingsRepo.get(dbKey, null);
-      const defaultValue = DEFAULT_BRAND[key];
-      return [key, value ?? defaultValue ?? null] as const;
-    })
-  );
+  try {
+    const entries = await Promise.all(
+      (Object.entries(SITE_SETTINGS_KEYS) as Array<[keyof typeof DEFAULT_BRAND, string]>).map(async ([key, dbKey]) => {
+        const value = await settingsRepo.get(dbKey, null);
+        const defaultValue = DEFAULT_BRAND[key];
+        return [key, value ?? defaultValue ?? null] as const;
+      })
+    );
 
-  const merged = Object.fromEntries(entries) as Partial<SiteSettings>;
-  return { ...DEFAULT_BRAND, ...merged } as SiteSettings;
+    const merged = Object.fromEntries(entries) as Partial<SiteSettings>;
+    return { ...DEFAULT_BRAND, ...merged } as SiteSettings;
+  } catch (error) {
+    console.warn("Impossible de charger les réglages de site depuis la base. Utilisation des valeurs par défaut.", error);
+    return { ...DEFAULT_BRAND };
+  }
 }
 
 export async function seedDefaultSiteSettings(): Promise<SiteSettings> {

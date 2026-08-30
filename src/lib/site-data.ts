@@ -65,6 +65,26 @@ export type BrandSettings = {
   heroPosterUrl?: string | null;
 };
 
+export const GALLERY_CATEGORIES = [
+  "education",
+  "protection",
+  "evenements",
+  "portrait",
+  "partenariats",
+  "autres",
+] as const;
+
+export type GalleryCategory = (typeof GALLERY_CATEGORIES)[number];
+
+export const GALLERY_CATEGORY_LABELS: Record<GalleryCategory, string> = {
+  education: "Éducation",
+  protection: "Protection",
+  evenements: "Événements",
+  portrait: "Portraits",
+  partenariats: "Partenariats",
+  autres: "Autres",
+};
+
 export const HERO_TYPING_WORDS = [
   "un avenir meilleur.",
   "l'éducation pour tous.",

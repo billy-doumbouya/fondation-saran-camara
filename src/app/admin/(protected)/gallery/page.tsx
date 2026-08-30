@@ -10,6 +10,7 @@ import Modal from "@/components/admin/Modal";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import ImageUploader from "@/components/admin/ImageUploader";
 import type { GalleryImage } from "@/lib/db/schema";
+import { GALLERY_CATEGORIES, GALLERY_CATEGORY_LABELS, type GalleryCategory } from "@/lib/site-data";
 import { playConfirmSound } from "@/lib/sound";
 
 async function fetchGallery(): Promise<GalleryImage[]> {
@@ -23,7 +24,7 @@ export default function AdminGalleryPage() {
   const { data: items = [], isLoading } = useQuery({ queryKey: ["admin-gallery"], queryFn: fetchGallery });
   const [modalOpen, setModalOpen] = useState(false);
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState<GalleryCategory | "">("");
   const [pending, setPending] = useState<{ url: string; publicId: string } | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
@@ -112,8 +113,19 @@ export default function AdminGalleryPage() {
             <input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
           </div>
           <div>
-            <label className="text-sm font-medium text-navy-700">Catégorie (optionnel)</label>
-            <input value={category} onChange={(e) => setCategory(e.target.value)} className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
+            <label className="text-sm font-medium text-navy-700">Catégorie</label>
+            <select
+              value={category}
+              onChange={(e) => setCategory((e.target.value as GalleryCategory) || "")}
+              className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+            >
+              <option value="">Aucune catégorie</option>
+              {GALLERY_CATEGORIES.map((option) => (
+                <option key={option} value={option}>
+                  {GALLERY_CATEGORY_LABELS[option]}
+                </option>
+              ))}
+            </select>
           </div>
           <button
             type="button"

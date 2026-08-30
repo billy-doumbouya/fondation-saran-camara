@@ -3,6 +3,7 @@ import Image from "next/image";
 import AnimatedSection from "@/components/site/AnimatedSection";
 import InstitutionalHero from "@/components/site/InstitutionalHero";
 import { galleryRepo } from "@/lib/db/repo";
+import { GALLERY_CATEGORY_LABELS } from "@/lib/site-data";
 
 export const metadata: Metadata = { title: "Galerie photos" };
 export const dynamic = "force-dynamic";
@@ -32,19 +33,31 @@ export default async function GalleryPage() {
             <span className="hidden text-sm text-navy-400 sm:block">Des souvenirs, des avancées</span>
           </div>
           <div className="columns-2 gap-4 sm:columns-3 [&>*]:mb-4">
-        {images.map((img, i) => (
-          <AnimatedSection key={img.id} delay={(i % 6) * 0.05}>
-            <div className="relative w-full overflow-hidden rounded-2xl shadow-sm">
-              <Image
-                src={img.imageUrl}
-                alt={img.title ?? "Photo FSCPE"}
-                width={500}
-                height={500}
-                className="w-full object-cover transition-transform duration-500 hover:scale-105"
-              />
-            </div>
-          </AnimatedSection>
-        ))}
+        {images.map((img, i) => {
+          const categoryKey = img.category as keyof typeof GALLERY_CATEGORY_LABELS | null;
+          const categoryLabel = categoryKey ? GALLERY_CATEGORY_LABELS[categoryKey] ?? img.category : null;
+
+          return (
+            <AnimatedSection key={img.id} delay={(i % 6) * 0.05}>
+              <div className="relative w-full overflow-hidden rounded-2xl shadow-sm">
+                <Image
+                  src={img.imageUrl}
+                  alt={img.title ?? "Photo FSCPE"}
+                  width={500}
+                  height={500}
+                  className="w-full object-cover transition-transform duration-500 hover:scale-105"
+                />
+                {categoryLabel && (
+                  <div className="absolute inset-x-2 bottom-2 flex justify-start">
+                    <span className="rounded-full border border-white/30 bg-black/45 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white backdrop-blur-sm">
+                      {categoryLabel}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </AnimatedSection>
+          );
+        })}
           </div>
           {images.length === 0 && <p className="mt-12 text-center text-navy-400">La galerie sera bientôt garnie de photos.</p>}
         </div>
