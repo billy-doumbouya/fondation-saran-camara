@@ -20,8 +20,12 @@ export const news = pgTable("news", {
   coverImagePublicId: text("cover_image_public_id"),
   published: boolean("published").notNull().default(false),
   publishedAt: timestamp("published_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 /** Témoignages */
@@ -34,7 +38,9 @@ export const testimonials = pgTable("testimonials", {
   photoPublicId: text("photo_public_id"),
   rating: integer("rating").default(5),
   published: boolean("published").notNull().default(true),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 /** Équipe / Gouvernance */
@@ -47,7 +53,9 @@ export const teamMembers = pgTable("team_members", {
   photoPublicId: text("photo_public_id"),
   organBody: varchar("organ_body", { length: 50 }).default("bureau"), // bureau | ca | fondatrice
   displayOrder: integer("display_order").notNull().default(0),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 /** Galerie photos */
@@ -57,7 +65,9 @@ export const galleryImages = pgTable("gallery_images", {
   imageUrl: text("image_url").notNull(),
   imagePublicId: text("image_public_id").notNull(),
   category: varchar("category", { length: 100 }),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 /** Programmes / Projets */
@@ -72,7 +82,9 @@ export const programs = pgTable("programs", {
   pillar: varchar("pillar", { length: 100 }), // education | protection | orphelins | social
   beneficiariesCount: integer("beneficiaries_count"),
   published: boolean("published").notNull().default(true),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 /** Agenda / Événements */
@@ -85,7 +97,9 @@ export const events = pgTable("events", {
   endAt: timestamp("end_at", { withTimezone: true }),
   coverImageUrl: text("cover_image_url"),
   published: boolean("published").notNull().default(true),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 /** Partenaires */
@@ -106,9 +120,12 @@ export const contactMessages = pgTable("contact_messages", {
   subject: varchar("subject", { length: 250 }),
   message: text("message").notNull(),
   isRead: boolean("is_read").notNull().default(false),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
+/** Dons (traçabilité, données sensibles — jamais exposées au chatbot) */
 /** Dons (traçabilité, données sensibles — jamais exposées au chatbot) */
 export const donations = pgTable("donations", {
   id: serial("id").primaryKey(),
@@ -119,9 +136,12 @@ export const donations = pgTable("donations", {
   amount: integer("amount").notNull(), // en GNF
   currency: varchar("currency", { length: 10 }).notNull().default("GNF"),
   provider: varchar("provider", { length: 50 }).notNull().default("geniuspay"),
+  paymentMethod: varchar("payment_method", { length: 50 }), // orange_money | mtn_money | moov_money | wave | card | checkout
   status: varchar("status", { length: 30 }).notNull().default("pending"), // pending | success | failed
   providerPayload: jsonb("provider_payload"),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
 });
 
 /** Réglages admin (mot de passe hashé, textes globaux, vidéo hero, etc.) */

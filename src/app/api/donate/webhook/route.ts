@@ -4,10 +4,6 @@ import { isValidGeniusPaySignature } from "@/lib/geniuspay";
 
 export const runtime = "nodejs";
 
-/**
- * Webhook GeniusPay : met à jour le statut du don.
- * Headers officiels : X-Webhook-Signature, X-Webhook-Timestamp, X-Webhook-Event.
- */
 export async function POST(request: NextRequest) {
   const rawBody = await request.text();
   const signature = request.headers.get("x-webhook-signature");

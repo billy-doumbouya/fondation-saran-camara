@@ -4,6 +4,8 @@ import AnimatedSection from "@/components/site/AnimatedSection";
 import InstitutionalHero from "@/components/site/InstitutionalHero";
 import DonateForm from "@/components/site/DonateForm";
 import Donation3DAccent from "@/app/(site)/Donation3DAccent";
+import { Suspense } from "react";
+import DonateFormSkeleton from "@/components/DonateFormSkeleton";
 
 export const metadata: Metadata = { title: "Faire un don" };
 
@@ -73,7 +75,9 @@ export default function DonatePage() {
               </div>
             </AnimatedSection>
             <AnimatedSection direction="right" delay={0.1}>
-              <DonateForm />
+              <Suspense fallback={<DonateFormSkeleton />}>
+                <DonateForm />
+              </Suspense>
               <div className="mt-4 flex items-center justify-center gap-2 text-xs text-navy-400">
                 <LockKeyhole size={14} className="text-primary-600" />
                 Paiement traité par un partenaire sécurisé
