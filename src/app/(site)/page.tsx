@@ -16,15 +16,13 @@ import ProgramCard from "@/components/site/cards/program-card";
 import NewsCard from "@/components/site/cards/news-card";
 import TestimonialCard from "@/components/site/cards/testimonial-card";
 import {
-  programsRepo,
-  newsRepo,
-  testimonialsRepo,
-  partnersRepo,
-} from "@/lib/db/repo";
+  getHomepageNews,
+  getHomepagePartners,
+  getHomepagePrograms,
+  getHomepageTestimonials,
+} from "@/lib/homepage-cache";
 import { BRAND } from "@/lib/site-data";
 import { getSiteSettings } from "@/lib/site-settings";
-
-export const dynamic = "force-dynamic";
 
 const PILLARS = [
   {
@@ -79,10 +77,10 @@ async function safe<T>(promise: Promise<T>, fallback: T): Promise<T> {
 export default async function HomePage() {
   const [siteSettings, programs, news, testimonials, partners] = await Promise.all([
     getSiteSettings(),
-    safe(programsRepo.listPublished(), []),
-    safe(newsRepo.listPublished(), []),
-    safe(testimonialsRepo.listPublished(), []),
-    safe(partnersRepo.listAll(), []),
+    safe(getHomepagePrograms(), []),
+    safe(getHomepageNews(), []),
+    safe(getHomepageTestimonials(), []),
+    safe(getHomepagePartners(), []),
   ]);
 
   const heroVideoUrl = siteSettings.heroVideoUrl || null;

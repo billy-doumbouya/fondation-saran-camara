@@ -53,7 +53,7 @@ export default function Hero({ videoUrl, posterUrl }: HeroProps) {
             muted
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
             poster={activePosterUrl}
             src={activeVideoUrl}
             onError={() => setVideoFailed(true)}

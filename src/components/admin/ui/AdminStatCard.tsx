@@ -19,6 +19,26 @@ export interface AdminStatCardProps {
   className?: string;
 }
 
+function CardWrapper({
+  href,
+  className,
+  children,
+}: {
+  href?: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  if (href) {
+    return (
+      <Link href={href} className={className}>
+        {children}
+      </Link>
+    );
+  }
+
+  return <div className={className}>{children}</div>;
+}
+
 const accentStyles = {
   primary: {
     iconBg: "bg-emerald-50 text-primary-700 border-primary-200/60",
@@ -60,11 +80,9 @@ export default function AdminStatCard({
 }: AdminStatCardProps) {
   const styles = accentStyles[accent];
 
-  const CardWrapper = href ? Link : "div";
-
   return (
     <CardWrapper
-      href={href ?? ""}
+      href={href}
       className={cn(
         "group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm transition-all duration-300",
         href && "hover:-translate-y-1 hover:border-gold-300 hover:shadow-lg hover:shadow-navy-950/5 cursor-pointer",

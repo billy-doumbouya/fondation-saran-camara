@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { isAuthenticated } from "@/lib/auth";
-import { contactRepo, eventsRepo, newsRepo, programsRepo, testimonialsRepo } from "@/lib/db/repo";
+import {
+  contactRepo,
+  eventsRepo,
+  newsRepo,
+  programsRepo,
+  testimonialsRepo,
+  donationsRepo,
+} from "@/lib/db/repo";
 
 export const runtime = "nodejs";
 
@@ -11,41 +18,120 @@ export async function GET() {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    const [pendingMessages, upcomingEvents, unpublishedNews, unpublishedPrograms, unpublishedTestimonials] = await Promise.all([
-      contactRepo.listUnread(),
-      eventsRepo.listAll(),
-      newsRepo.listAll(),
-      programsRepo.listAll(),
-      testimonialsRepo.listAll(),
+    const [
+      pendingMessages,
+      allEvents,
+      allNews,
+      allPrograms,
+      allTestimonials,
+      allDonations,
+    ] = await Promise.all([
+      contactRepo.listUnread().catch(() => []),
+      eventsRepo.listAll().catch(() => []),
+      newsRepo.listAll().catch(() => []),
+      programsRepo.listAll().catch(() => []),
+      testimonialsRepo.listAll().catch(() => []),
+      donationsRepo.listAll().catch(() => []),
     ]);
 
-    const items = [
-      pendingMessages.length > 0
-        ? {
-            title: "Messages reçus",
-            description: `${pendingMessages.length} message${pendingMessages.length > 1 ? "s" : ""} en attente de lecture`,
-            accent: "primary" as const,
-          }
-        : null,
-      upcomingEvents.filter((event) => new Date(event.startAt) >= new Date()).length > 0
-        ? {
-            title: "Événements à venir",
-            description: `${upcomingEvents.filter((event) => new Date(event.startAt) >= new Date()).length} rendez-vous programmé${upcomingEvents.filter((event) => new Date(event.startAt) >= new Date()).length > 1 ? "s" : ""}`,
-            accent: "gold" as const,
-          }
-        : null,
-      unpublishedNews.length > 0 || unpublishedPrograms.length > 0 || unpublishedTestimonials.length > 0
-        ? {
-            title: "Contenus à relire",
-            description: `${[unpublishedNews, unpublishedPrograms, unpublishedTestimonials].filter((list) => list.length > 0).reduce((sum, list) => sum + list.length, 0)} élément${[unpublishedNews, unpublishedPrograms, unpublishedTestimonials].filter((list) => list.length > 0).reduce((sum, list) => sum + list.length, 0) > 1 ? "s" : ""} nécessitent une vérification`,
-            accent: "navy" as const,
-          }
-        : null,
-    ].filter(Boolean) as Array<{ title: string; description: string; accent: "primary" | "gold" | "navy" }>;
+    const items = [];
 
-    return NextResponse.json({ items, count: items.length });
+    // 1. Messages de contact non lus
+    if (pendingMessages.length > 0) {
+      items.push({
+        id: "messages",
+        title: "Messages reçus",
+        description: `${pendingMessages.length} nouveau${
+          pendingMessages.length > 1 ? "x" : ""
+        } message${pendingMessages.length > 1 ? "s" : ""} en attente de lecture`,
+        accent: "primary" as const,
+        href: "/admin/messages",
+        count: pendingMessages.length,
+      });
+    }
+
+    // 2. Dons récents ou en attente
+    const pendingDonations = allDonations.filter((d) => d.status === "pending");
+    const recentSuccessDonations = allDonations.filter(
+      (d) =>
+        d.status === "success" &&
+        new Date(d.createdAt).getTime() > Date.now() - 7 * 86400000
+    );
+
+    if (pendingDonations.length > 0) {
+      items.push({
+        id: "donations-pending",
+        title: "Dons en attente",
+        description: `${pendingDonations.length} transaction${
+          pendingDonations.length > 1 ? "s" : ""
+        } de don en cours de confirmation`,
+        accent: "gold" as const,
+        href: "/admin/donations",
+        count: pendingDonations.length,
+      });
+    } else if (recentSuccessDonations.length > 0) {
+      items.push({
+        id: "donations-success",
+        title: "Dons confirmés (7 jours)",
+        description: `${recentSuccessDonations.length} don${
+          recentSuccessDonations.length > 1 ? "s" : ""
+        } validé${recentSuccessDonations.length > 1 ? "s" : ""} récemment`,
+        accent: "primary" as const,
+        href: "/admin/donations",
+        count: recentSuccessDonations.length,
+      });
+    }
+
+    // 3. Événements à venir
+    const now = new Date();
+    const upcomingEvents = allEvents.filter(
+      (event) => new Date(event.startAt) >= now
+    );
+    if (upcomingEvents.length > 0) {
+      items.push({
+        id: "events",
+        title: "Événements à venir",
+        description: `${upcomingEvents.length} rendez-vous planifié${
+          upcomingEvents.length > 1 ? "s" : ""
+        } dans l'agenda`,
+        accent: "gold" as const,
+        href: "/admin/events",
+        count: upcomingEvents.length,
+      });
+    }
+
+    // 4. Brouillons / Contenus non publiés
+    const unpublishedNews = allNews.filter((n) => !n.published);
+    const unpublishedPrograms = allPrograms.filter((p) => !p.published);
+    const draftCount = unpublishedNews.length + unpublishedPrograms.length;
+
+    if (draftCount > 0) {
+      items.push({
+        id: "drafts",
+        title: "Contenus en brouillon",
+        description: `${draftCount} article${
+          draftCount > 1 ? "s" : ""
+        } ou programme${draftCount > 1 ? "s" : ""} non encore publié${
+          draftCount > 1 ? "s" : ""
+        }`,
+        accent: "navy" as const,
+        href: unpublishedNews.length > 0 ? "/admin/news" : "/admin/programs",
+        count: draftCount,
+      });
+    }
+
+    const totalCount = items.reduce((sum, item) => sum + (item.count || 1), 0);
+
+    return NextResponse.json({
+      items,
+      count: items.length,
+      totalCount,
+    });
   } catch (error) {
     console.error("Admin notifications load failed", error);
-    return NextResponse.json({ error: "Erreur lors du chargement des notifications" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Erreur lors du chargement des notifications" },
+      { status: 500 }
+    );
   }
 }

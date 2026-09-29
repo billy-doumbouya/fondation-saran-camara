@@ -1,12 +1,26 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Save, ShieldCheck, KeyRound } from "lucide-react";
-import { siteSettingsSchema, adminPasswordUpdateSchema, type SiteSettingsFormValues, type AdminPasswordUpdateFormValues } from "@/lib/validations";
+import {
+  Loader2,
+  Save,
+  ShieldCheck,
+  KeyRound,
+  Eye,
+  EyeOff,
+  Sparkles,
+} from "lucide-react";
+import ImageUploader from "@/components/admin/ImageUploader";
+import {
+  siteSettingsSchema,
+  adminPasswordUpdateSchema,
+  type SiteSettingsFormValues,
+  type AdminPasswordUpdateFormValues,
+} from "@/lib/validations";
 import { DEFAULT_BRAND } from "@/lib/site-data";
 
 async function fetchSettings(): Promise<SiteSettingsFormValues> {
@@ -21,6 +35,11 @@ export default function AdminSettingsPage() {
     queryKey: ["admin-settings"],
     queryFn: fetchSettings,
   });
+
+  // États pour afficher/masquer les mots de passe
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const settingsForm = useForm<SiteSettingsFormValues>({
     resolver: yupResolver(siteSettingsSchema),
@@ -76,7 +95,7 @@ export default function AdminSettingsPage() {
       return res.json();
     },
     onSuccess: () => {
-      toast.success("Mot de passe mis à jour.");
+      toast.success("Mot de passe mis à jour avec succès.");
       passwordForm.reset({ currentPassword: "", newPassword: "", confirmPassword: "" });
     },
     onError: (err: Error) => toast.error(err.message),
@@ -90,16 +109,24 @@ export default function AdminSettingsPage() {
     );
   }
 
+  const currentPosterUrl = settingsForm.watch("heroPosterUrl");
+
   return (
     <div className="space-y-6">
       <div className="rounded-[28px] border border-navy-100 bg-white p-5 shadow-[0_18px_45px_rgba(16,26,46,0.06)] sm:p-6">
-        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-600">Paramètres</p>
-        <h1 className="font-display mt-2 text-2xl font-bold text-navy-900">Informations du site & accès admin</h1>
-        <p className="mt-1 text-sm text-navy-500">Adaptez les informations publiques et sécurisez le mot de passe du back-office.</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-600">Configuration</p>
+        <h1 className="font-display mt-2 text-2xl font-bold text-navy-900">Paramètres & Accès de la plateforme</h1>
+        <p className="mt-1 text-sm text-navy-500">
+          Gérez l’identité publique de la fondation, les coordonnées, les médias d’accueil et vos identifiants administrateur.
+        </p>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
-        <form onSubmit={settingsForm.handleSubmit((v) => saveSettingsMutation.mutate(v))} className="space-y-5 rounded-[28px] border border-navy-100 bg-white p-5 shadow-sm sm:p-6">
+        {/* Formulaire des paramètres du site */}
+        <form
+          onSubmit={settingsForm.handleSubmit((v) => saveSettingsMutation.mutate(v))}
+          className="space-y-5 rounded-[28px] border border-navy-100 bg-white p-5 shadow-sm sm:p-6"
+        >
           <div className="flex items-center gap-2 text-primary-700">
             <ShieldCheck size={18} />
             <p className="text-sm font-semibold uppercase tracking-[0.12em]">Profil de la fondation</p>
@@ -107,109 +134,291 @@ export default function AdminSettingsPage() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <label className="text-sm font-medium text-navy-700">Nom court</label>
-              <input {...settingsForm.register("name")} className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
-              {settingsForm.formState.errors.name && <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.name.message}</p>}
+              <label className="text-sm font-medium text-navy-700">Nom usuel</label>
+              <input
+                {...settingsForm.register("name")}
+                placeholder="Ex: FSCPE"
+                className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+              />
+              {settingsForm.formState.errors.name && (
+                <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.name.message}</p>
+              )}
             </div>
+
             <div>
               <label className="text-sm font-medium text-navy-700">Sigle</label>
-              <input {...settingsForm.register("acronym")} className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
-              {settingsForm.formState.errors.acronym && <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.acronym.message}</p>}
+              <input
+                {...settingsForm.register("acronym")}
+                placeholder="Ex: FSCPE"
+                className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+              />
+              {settingsForm.formState.errors.acronym && (
+                <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.acronym.message}</p>
+              )}
             </div>
+
             <div className="md:col-span-2">
-              <label className="text-sm font-medium text-navy-700">Nom complet</label>
-              <input {...settingsForm.register("fullName")} className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
-              {settingsForm.formState.errors.fullName && <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.fullName.message}</p>}
+              <label className="text-sm font-medium text-navy-700">Nom officiel complet</label>
+              <input
+                {...settingsForm.register("fullName")}
+                placeholder="Ex: Fondation Saran Camara pour la Protection de l'Enfance"
+                className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+              />
+              {settingsForm.formState.errors.fullName && (
+                <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.fullName.message}</p>
+              )}
             </div>
+
             <div className="md:col-span-2">
-              <label className="text-sm font-medium text-navy-700">Slogan</label>
-              <input {...settingsForm.register("slogan")} className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
-              {settingsForm.formState.errors.slogan && <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.slogan.message}</p>}
+              <label className="text-sm font-medium text-navy-700">Slogan de la fondation</label>
+              <input
+                {...settingsForm.register("slogan")}
+                placeholder="Ex: Protéger, éduquer et offrir un avenir à chaque enfant en Guinée."
+                className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+              />
+              {settingsForm.formState.errors.slogan && (
+                <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.slogan.message}</p>
+              )}
             </div>
+
             <div>
-              <label className="text-sm font-medium text-navy-700">Fondateur</label>
-              <input {...settingsForm.register("founderName")} className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
-              {settingsForm.formState.errors.founderName && <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.founderName.message}</p>}
+              <label className="text-sm font-medium text-navy-700">Nom de la fondatrice</label>
+              <input
+                {...settingsForm.register("founderName")}
+                placeholder="Ex: Mme Saran Camara"
+                className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+              />
+              {settingsForm.formState.errors.founderName && (
+                <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.founderName.message}</p>
+              )}
             </div>
+
             <div>
-              <label className="text-sm font-medium text-navy-700">Email</label>
-              <input {...settingsForm.register("email")} className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
-              {settingsForm.formState.errors.email && <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.email.message}</p>}
+              <label className="text-sm font-medium text-navy-700">Email officiel</label>
+              <input
+                {...settingsForm.register("email")}
+                placeholder="Ex: contact@fscpe.org"
+                className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+              />
+              {settingsForm.formState.errors.email && (
+                <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.email.message}</p>
+              )}
             </div>
+
             <div className="md:col-span-2">
-              <label className="text-sm font-medium text-navy-700">Adresse</label>
-              <input {...settingsForm.register("address")} className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
-              {settingsForm.formState.errors.address && <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.address.message}</p>}
+              <label className="text-sm font-medium text-navy-700">Siège social / Adresse</label>
+              <input
+                {...settingsForm.register("address")}
+                placeholder="Ex: Quartier Matam Lido, Commune de Matam, Conakry, Guinée"
+                className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+              />
+              {settingsForm.formState.errors.address && (
+                <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.address.message}</p>
+              )}
             </div>
+
             <div>
-              <label className="text-sm font-medium text-navy-700">Téléphone</label>
-              <input {...settingsForm.register("phone")} className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
-              {settingsForm.formState.errors.phone && <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.phone.message}</p>}
+              <label className="text-sm font-medium text-navy-700">Téléphone principal</label>
+              <input
+                {...settingsForm.register("phone")}
+                placeholder="Ex: +224 622 00 00 00"
+                className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+              />
+              {settingsForm.formState.errors.phone && (
+                <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.phone.message}</p>
+              )}
             </div>
+
             <div>
-              <label className="text-sm font-medium text-navy-700">Téléphone secondaire</label>
-              <input {...settingsForm.register("phoneSecondary")} className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
+              <label className="text-sm font-medium text-navy-700">Téléphone secondaire (optionnel)</label>
+              <input
+                {...settingsForm.register("phoneSecondary")}
+                placeholder="Ex: +224 664 00 00 00"
+                className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+              />
             </div>
+
             <div>
-              <label className="text-sm font-medium text-navy-700">WhatsApp (numéro sans +)</label>
-              <input {...settingsForm.register("whatsappNumber")} className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
-              {settingsForm.formState.errors.whatsappNumber && <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.whatsappNumber.message}</p>}
+              <label className="text-sm font-medium text-navy-700">WhatsApp (chiffres sans +)</label>
+              <input
+                {...settingsForm.register("whatsappNumber")}
+                placeholder="Ex: 224622000000"
+                className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+              />
+              {settingsForm.formState.errors.whatsappNumber && (
+                <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.whatsappNumber.message}</p>
+              )}
             </div>
+
             <div>
-              <label className="text-sm font-medium text-navy-700">WhatsApp (affichage)</label>
-              <input {...settingsForm.register("whatsappDisplay")} className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
-              {settingsForm.formState.errors.whatsappDisplay && <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.whatsappDisplay.message}</p>}
+              <label className="text-sm font-medium text-navy-700">WhatsApp (libellé d'affichage)</label>
+              <input
+                {...settingsForm.register("whatsappDisplay")}
+                placeholder="Ex: +224 622 00 00 00"
+                className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+              />
+              {settingsForm.formState.errors.whatsappDisplay && (
+                <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.whatsappDisplay.message}</p>
+              )}
             </div>
+
             <div className="md:col-span-2">
-              <label className="text-sm font-medium text-navy-700">Citation</label>
-              <textarea rows={3} {...settingsForm.register("quote")} className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
-              {settingsForm.formState.errors.quote && <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.quote.message}</p>}
+              <label className="text-sm font-medium text-navy-700">Citation phare</label>
+              <textarea
+                rows={3}
+                {...settingsForm.register("quote")}
+                placeholder="Ex: Donner à chaque orphelin et enfant vulnérable les moyens de construire son propre avenir."
+                className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+              />
+              {settingsForm.formState.errors.quote && (
+                <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.quote.message}</p>
+              )}
             </div>
+
             <div className="md:col-span-2">
-              <label className="text-sm font-medium text-navy-700">Vidéo d’accueil (URL)</label>
-              <input {...settingsForm.register("heroVideoUrl")} className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" placeholder="https://...mp4" />
-              {settingsForm.formState.errors.heroVideoUrl && <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.heroVideoUrl.message}</p>}
+              <label className="text-sm font-medium text-navy-700">Vidéo d’accueil (URL directe MP4)</label>
+              <input
+                {...settingsForm.register("heroVideoUrl")}
+                placeholder="Ex: https://res.cloudinary.com/fscpe/video/upload/v1/hero-bg.mp4"
+                className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+              />
+              {settingsForm.formState.errors.heroVideoUrl && (
+                <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.heroVideoUrl.message}</p>
+              )}
             </div>
-            <div className="md:col-span-2">
-              <label className="text-sm font-medium text-navy-700">Poster d’accueil (URL)</label>
-              <input {...settingsForm.register("heroPosterUrl")} className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" placeholder="https://...jpg" />
-              {settingsForm.formState.errors.heroPosterUrl && <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.heroPosterUrl.message}</p>}
+
+            {/* Poster d’accueil avec le widget Cloudinary multi-sources */}
+            <div className="md:col-span-2 pt-2 border-t border-navy-100">
+              <ImageUploader
+                label="Poster d’accueil (Image de couverture Hero)"
+                description="Image affichée en fond avant le lancement de la vidéo ou sur les écrans mobiles."
+                value={currentPosterUrl ? { url: currentPosterUrl } : null}
+                onChange={(img) => settingsForm.setValue("heroPosterUrl", img?.url || null, { shouldDirty: true })}
+                folder="fscpe/brand"
+                aspectRatio="video"
+              />
+              {settingsForm.formState.errors.heroPosterUrl && (
+                <p className="mt-1 text-xs text-red-600">{settingsForm.formState.errors.heroPosterUrl.message}</p>
+              )}
             </div>
           </div>
 
-          <button type="submit" disabled={saveSettingsMutation.isPending} className="flex items-center justify-center gap-2 rounded-full bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_12px_25px_rgba(34,122,63,0.22)] transition-all hover:-translate-y-0.5 hover:bg-primary-700 disabled:opacity-60">
+          <button
+            type="submit"
+            disabled={saveSettingsMutation.isPending}
+            className="flex items-center justify-center gap-2 rounded-full bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-[0_12px_25px_rgba(34,122,63,0.22)] transition-all hover:-translate-y-0.5 hover:bg-primary-700 disabled:opacity-60"
+          >
             {saveSettingsMutation.isPending && <Loader2 className="animate-spin" size={16} />}
             <Save size={16} /> Enregistrer les paramètres
           </button>
         </form>
 
-        <form onSubmit={passwordForm.handleSubmit((v) => updatePasswordMutation.mutate(v))} className="space-y-5 rounded-[28px] border border-navy-100 bg-white p-5 shadow-sm sm:p-6">
-          <div className="flex items-center gap-2 text-primary-700">
-            <KeyRound size={18} />
-            <p className="text-sm font-semibold uppercase tracking-[0.12em]">Mot de passe admin</p>
-          </div>
+        {/* Formulaire de mot de passe avec gestion des icônes yeux (Eye / EyeOff) */}
+        <div className="space-y-6">
+          <form
+            onSubmit={passwordForm.handleSubmit((v) => updatePasswordMutation.mutate(v))}
+            className="space-y-5 rounded-[28px] border border-navy-100 bg-white p-5 shadow-sm sm:p-6"
+          >
+            <div className="flex items-center gap-2 text-primary-700">
+              <KeyRound size={18} />
+              <p className="text-sm font-semibold uppercase tracking-[0.12em]">Mot de passe administrateur</p>
+            </div>
+            <p className="text-xs text-navy-500">
+              Assurez la sécurité de votre espace de gestion en choisissant un mot de passe fort d&apos;au moins 8 caractères.
+            </p>
 
-          <div>
-            <label className="text-sm font-medium text-navy-700">Mot de passe actuel</label>
-            <input type="password" {...passwordForm.register("currentPassword")} className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
-            {passwordForm.formState.errors.currentPassword && <p className="mt-1 text-xs text-red-600">{passwordForm.formState.errors.currentPassword.message}</p>}
-          </div>
-          <div>
-            <label className="text-sm font-medium text-navy-700">Nouveau mot de passe</label>
-            <input type="password" {...passwordForm.register("newPassword")} className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
-            {passwordForm.formState.errors.newPassword && <p className="mt-1 text-xs text-red-600">{passwordForm.formState.errors.newPassword.message}</p>}
-          </div>
-          <div>
-            <label className="text-sm font-medium text-navy-700">Confirmer le mot de passe</label>
-            <input type="password" {...passwordForm.register("confirmPassword")} className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100" />
-            {passwordForm.formState.errors.confirmPassword && <p className="mt-1 text-xs text-red-600">{passwordForm.formState.errors.confirmPassword.message}</p>}
-          </div>
+            {/* Mot de passe actuel */}
+            <div>
+              <label className="text-sm font-medium text-navy-700">Mot de passe actuel</label>
+              <div className="relative mt-1.5">
+                <input
+                  type={showCurrentPassword ? "text" : "password"}
+                  {...passwordForm.register("currentPassword")}
+                  placeholder="••••••••••••"
+                  className="w-full rounded-xl border border-navy-200 px-4 py-2.5 pr-11 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-400 hover:text-navy-700 transition-colors p-1"
+                  aria-label={showCurrentPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                >
+                  {showCurrentPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                </button>
+              </div>
+              {passwordForm.formState.errors.currentPassword && (
+                <p className="mt-1 text-xs text-red-600">{passwordForm.formState.errors.currentPassword.message}</p>
+              )}
+            </div>
 
-          <button type="submit" disabled={updatePasswordMutation.isPending} className="flex w-full items-center justify-center gap-2 rounded-full bg-navy-900 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-navy-800 disabled:opacity-60">
-            {updatePasswordMutation.isPending && <Loader2 className="animate-spin" size={16} />}
-            Mettre à jour le mot de passe
-          </button>
-        </form>
+            {/* Nouveau mot de passe */}
+            <div>
+              <label className="text-sm font-medium text-navy-700">Nouveau mot de passe</label>
+              <div className="relative mt-1.5">
+                <input
+                  type={showNewPassword ? "text" : "password"}
+                  {...passwordForm.register("newPassword")}
+                  placeholder="Minimum 8 caractères (ex: FSCPE_2026!#)"
+                  className="w-full rounded-xl border border-navy-200 px-4 py-2.5 pr-11 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-400 hover:text-navy-700 transition-colors p-1"
+                  aria-label={showNewPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                >
+                  {showNewPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                </button>
+              </div>
+              {passwordForm.formState.errors.newPassword && (
+                <p className="mt-1 text-xs text-red-600">{passwordForm.formState.errors.newPassword.message}</p>
+              )}
+            </div>
+
+            {/* Confirmer le mot de passe */}
+            <div>
+              <label className="text-sm font-medium text-navy-700">Confirmer le nouveau mot de passe</label>
+              <div className="relative mt-1.5">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  {...passwordForm.register("confirmPassword")}
+                  placeholder="Répétez à l'identique le nouveau mot de passe"
+                  className="w-full rounded-xl border border-navy-200 px-4 py-2.5 pr-11 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-navy-400 hover:text-navy-700 transition-colors p-1"
+                  aria-label={showConfirmPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                >
+                  {showConfirmPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                </button>
+              </div>
+              {passwordForm.formState.errors.confirmPassword && (
+                <p className="mt-1 text-xs text-red-600">{passwordForm.formState.errors.confirmPassword.message}</p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={updatePasswordMutation.isPending}
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-navy-900 px-5 py-2.5 text-sm font-semibold text-white shadow transition-all hover:bg-navy-800 disabled:opacity-60"
+            >
+              {updatePasswordMutation.isPending && <Loader2 className="animate-spin" size={16} />}
+              Mettre à jour le mot de passe
+            </button>
+          </form>
+
+          {/* Conseils de sécurité */}
+          <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4 text-xs text-emerald-900 space-y-1.5">
+            <div className="flex items-center gap-1.5 font-bold text-emerald-800">
+              <Sparkles size={14} /> Conseil de sécurité FSCPE
+            </div>
+            <p className="text-emerald-700">
+              Utilisez des lettres majuscules, minuscules, des chiffres et des symboles pour renforcer la sécurité de la session d&apos;administration.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

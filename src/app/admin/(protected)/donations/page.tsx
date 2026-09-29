@@ -1,9 +1,8 @@
 import { desc } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { donations } from "@/lib/db/schema";
-import AdminBadge from "@/components/admin/ui/AdminBadge";
 import AdminStatCard from "@/components/admin/ui/AdminStatCard";
-import DataTable, { type DataTableColumn } from "@/components/admin/DataTable";
+import DonationsTable, { type DonationRow } from "@/components/admin/DonationsTable";
 import { HeartHandshake, CreditCard, CheckCircle2, Clock } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -11,24 +10,10 @@ export const metadata = {
   title: "Dons & Finances — Administration FSCPE",
 };
 
-interface DonationRow {
-  id: number;
-  reference: string;
-  donorName: string | null;
-  donorEmail: string | null;
-  donorPhone: string | null;
-  amount: number;
-  currency: string;
-  provider: string;
-  paymentMethod: string | null;
-  status: string;
-  createdAt: Date;
-}
-
 export default async function AdminDonationsPage() {
   let rows: DonationRow[] = [];
   try {
-    rows = await db
+    const donationRows = await db
       .select({
         id: donations.id,
         reference: donations.reference,
@@ -44,6 +29,10 @@ export default async function AdminDonationsPage() {
       })
       .from(donations)
       .orderBy(desc(donations.createdAt));
+    rows = donationRows.map((row) => ({
+      ...row,
+      createdAt: row.createdAt.toISOString(),
+    }));
   } catch (error) {
     console.error("Erreur chargement dons:", error);
     rows = [];
@@ -57,108 +46,8 @@ export default async function AdminDonationsPage() {
   const successCount = rows.filter((d) => d.status === "success").length;
   const pendingCount = rows.filter((d) => d.status === "pending").length;
 
-  const formatGNF = (val: number) => {
-    return new Intl.NumberFormat("fr-FR").format(val) + " GNF";
-  };
-
-  const columns: DataTableColumn<DonationRow>[] = [
-    {
-      header: "Référence & Date",
-      sortKey: "createdAt",
-      render: (row) => (
-        <div>
-          <span className="font-mono text-xs font-bold text-navy-950">
-            {row.reference}
-          </span>
-          <p className="text-[11px] text-slate-400">
-            {new Date(row.createdAt).toLocaleDateString("fr-FR", {
-              day: "2-digit",
-              month: "short",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </p>
-        </div>
-      ),
-    },
-    {
-      header: "Donateur",
-      sortKey: "donorName",
-      render: (row) => (
-        <div>
-          <p className="font-semibold text-navy-900">
-            {row.donorName || "Donateur anonyme"}
-          </p>
-          <div className="flex flex-col text-[11px] text-slate-500">
-            {row.donorEmail && <span>{row.donorEmail}</span>}
-            {row.donorPhone && (
-              <span className="font-mono text-slate-400">{row.donorPhone}</span>
-            )}
-          </div>
-        </div>
-      ),
-    },
-    {
-      header: "Montant",
-      sortKey: "amount",
-      className: "text-right font-mono",
-      render: (row) => (
-        <div className="text-right">
-          <span className="font-bold text-navy-950 text-sm">
-            {new Intl.NumberFormat("fr-FR").format(row.amount)} {row.currency}
-          </span>
-        </div>
-      ),
-    },
-    {
-      header: "Moyen de paiement",
-      sortKey: "paymentMethod",
-      render: (row) => {
-        const method = row.paymentMethod || row.provider;
-        const formatted =
-          method === "orange_money"
-            ? "Orange Money Guinée"
-            : method === "mtn_money"
-            ? "MTN Mobile Money"
-            : method === "card"
-            ? "Carte bancaire"
-            : method;
-
-        return (
-          <span className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2 py-0.5 font-mono text-[11px] text-slate-700">
-            <CreditCard size={12} className="text-slate-400" />
-            <span className="capitalize">{formatted}</span>
-          </span>
-        );
-      },
-    },
-    {
-      header: "Statut",
-      sortKey: "status",
-      render: (row) => {
-        if (row.status === "success") {
-          return (
-            <AdminBadge variant="success" dot size="sm">
-              Confirmé
-            </AdminBadge>
-          );
-        }
-        if (row.status === "pending") {
-          return (
-            <AdminBadge variant="warning" dot pulse size="sm">
-              En cours
-            </AdminBadge>
-          );
-        }
-        return (
-          <AdminBadge variant="danger" dot size="sm">
-            Échoué
-          </AdminBadge>
-        );
-      },
-    },
-  ];
+  const formatGNF = (val: number) =>
+    new Intl.NumberFormat("fr-FR").format(val) + " GNF";
 
   return (
     <div className="space-y-6">
@@ -205,18 +94,7 @@ export default async function AdminDonationsPage() {
       </div>
 
       {/* Pro DataTable des dons */}
-      <DataTable
-        title="Historique des transactions"
-        subtitle="Recherche instantanée par nom, référence ou e-mail"
-        keyField="id"
-        columns={columns}
-        rows={rows}
-        searchable={true}
-        searchPlaceholder="Rechercher par référence (ex: FSCPE-), nom, email..."
-        exportable={true}
-        exportFilename="fscpe-dons-donateurs"
-        emptyLabel="Aucun don enregistré pour l'instant."
-      />
+      <DonationsTable rows={rows} />
     </div>
   );
 }

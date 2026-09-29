@@ -1,5 +1,6 @@
 "use client";
 
+import type { MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useLogoTapStore } from "@/lib/store";
@@ -21,17 +22,18 @@ export default function Logo({ className, withWordmark = true, enableAdminTrigge
   const router = useRouter();
   const registerTap = useLogoTapStore((s) => s.registerTap);
 
-  const handleClick = () => {
+  const handleClick = (event: MouseEvent<HTMLDivElement>) => {
     if (!enableAdminTrigger) return;
     const reached = registerTap();
-    if (reached) router.push("/admin/login");
+    if (reached) {
+      event.preventDefault();
+      router.push("/admin/login");
+    }
   };
 
   return (
-    <button
-      type="button"
+    <div
       onClick={handleClick}
-      aria-label="Fondation Saran Camara"
       className={cn(
         "group flex items-center gap-2.5 select-none",
         enableAdminTrigger ? "cursor-pointer" : "cursor-default",
@@ -57,6 +59,6 @@ export default function Logo({ className, withWordmark = true, enableAdminTrigge
           </span>
         </span>
       )}
-    </button>
+    </div>
   );
 }

@@ -1,10 +1,13 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useEffect, useRef, useState } from "react";
+import { useForm, type FieldErrors } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { AnimatePresence, motion } from "motion/react";
 import {
+  Check,
   Send,
   Loader2,
   User,
@@ -18,6 +21,8 @@ import {
   Newspaper,
   HelpCircle,
   ShieldCheck,
+  Sparkles,
+  X,
 } from "lucide-react";
 import { contactSchema, type ContactFormValues } from "@/lib/validations";
 import { cn } from "@/lib/utils";
@@ -61,7 +66,18 @@ const SUBJECT_OPTIONS = [
   },
 ] as const;
 
+interface ContactReceipt {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
 export default function ContactForm() {
+  const [receipt, setReceipt] = useState<ContactReceipt | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const submitButtonRef = useRef<HTMLButtonElement>(null);
   const {
     register,
     handleSubmit,
@@ -71,6 +87,7 @@ export default function ContactForm() {
     formState: { errors },
   } = useForm<ContactFormValues>({
     resolver: yupResolver(contactSchema),
+    shouldFocusError: false,
     defaultValues: {
       subject: SUBJECT_OPTIONS[0].id,
       consent: false,
@@ -80,6 +97,51 @@ export default function ContactForm() {
 
   const selectedSubject = watch("subject");
   const messageValue = watch("message") || "";
+
+  const handleInvalidSubmit = (formErrors: FieldErrors<ContactFormValues>) => {
+    const firstError = Object.values(formErrors).find(
+      (error) => typeof error?.message === "string"
+    );
+    toast.error(firstError?.message ?? "Vérifiez les champs obligatoires du formulaire.");
+  };
+
+  useEffect(() => {
+    if (!receipt) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    closeButtonRef.current?.focus({ preventScroll: true });
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setReceipt(null);
+        requestAnimationFrame(() => submitButtonRef.current?.focus({ preventScroll: true }));
+        return;
+      }
+
+      if (event.key !== "Tab") return;
+      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), a[href], input:not([disabled]), textarea:not([disabled])'
+      );
+      if (!focusable?.length) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [receipt]);
 
   const mutation = useMutation({
     mutationFn: async (values: ContactFormValues) => {
@@ -92,16 +154,29 @@ export default function ContactForm() {
       if (!res.ok) throw new Error(data?.error || "Échec de l'envoi du message.");
       return data;
     },
-    onSuccess: (data) => {
-      toast.success(data.message || "Message transmis avec succès ! Notre équipe vous répondra très rapidement.");
-      reset({ subject: SUBJECT_OPTIONS[0].id, consent: false, website: "" });
+    onSuccess: (_data, values) => {
+      setReceipt({
+        name: values.name.trim(),
+        email: values.email.trim(),
+        subject: values.subject.trim(),
+        message: values.message.trim(),
+      });
+      reset({
+        name: "",
+        email: "",
+        phone: "",
+        subject: SUBJECT_OPTIONS[0].id,
+        message: "",
+        consent: false,
+        website: "",
+      });
     },
     onError: (err: Error) => toast.error(err.message),
   });
 
   return (
     <form
-      onSubmit={handleSubmit((v) => mutation.mutate(v))}
+      onSubmit={handleSubmit((v) => mutation.mutate(v), handleInvalidSubmit)}
       className="flex flex-col gap-6"
       noValidate
     >
@@ -247,11 +322,16 @@ export default function ContactForm() {
       </Field>
 
       {/* Consentement RGPD / Confidentialité */}
-      <div className="rounded-xl border border-navy-100 bg-navy-50/40 p-4">
+      <div className={cn(
+        "rounded-xl border border-navy-100 bg-navy-50/40 p-4",
+        errors.consent && "border-red-300 bg-red-50/60"
+      )}>
         <label className="flex items-start gap-3 cursor-pointer select-none">
           <input
             type="checkbox"
             {...register("consent")}
+            aria-invalid={Boolean(errors.consent)}
+            aria-describedby={errors.consent ? "contact-consent-error" : undefined}
             className="mt-0.5 h-4 w-4 shrink-0 rounded border-navy-300 text-primary-600 focus:ring-gold-500 focus:ring-offset-0"
           />
           <span className="text-xs leading-relaxed text-navy-600">
@@ -266,11 +346,11 @@ export default function ContactForm() {
             >
               politique de confidentialité
             </a>
-            .
+            . <span className="font-semibold text-primary-700">(requis)</span>
           </span>
         </label>
         {errors.consent && (
-          <p className="mt-2 text-xs font-medium text-red-600">
+          <p id="contact-consent-error" role="alert" className="mt-2 text-xs font-medium text-red-600">
             {errors.consent.message}
           </p>
         )}
@@ -285,6 +365,7 @@ export default function ContactForm() {
 
         <button
           type="submit"
+          ref={submitButtonRef}
           disabled={mutation.isPending}
           className="group relative inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-primary-600 px-7 py-3.5 font-display text-sm font-semibold text-white shadow-lg shadow-primary-700/25 transition-all duration-300 hover:bg-primary-700 hover:shadow-xl hover:shadow-primary-700/35 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed"
         >
@@ -310,6 +391,87 @@ export default function ContactForm() {
           )}
         </button>
       </div>
+
+      <AnimatePresence>
+        {receipt && (
+          <motion.div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-navy-950/55 p-4 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                setReceipt(null);
+                requestAnimationFrame(() => submitButtonRef.current?.focus({ preventScroll: true }));
+              }
+            }}
+          >
+            <motion.div
+              ref={dialogRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="contact-receipt-title"
+              aria-describedby="contact-receipt-description"
+              initial={{ opacity: 0, y: 16, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.98 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-white/80 bg-white shadow-2xl shadow-navy-950/25"
+            >
+              <div className="h-1 bg-gradient-to-r from-primary-600 via-gold-400 to-primary-500" />
+              <div className="p-6 sm:p-8">
+                <button
+                  ref={closeButtonRef}
+                  type="button"
+                  onClick={() => {
+                    setReceipt(null);
+                    requestAnimationFrame(() => submitButtonRef.current?.focus({ preventScroll: true }));
+                  }}
+                  aria-label="Fermer la confirmation"
+                  className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full text-navy-400 transition-colors hover:bg-navy-50 hover:text-navy-800"
+                >
+                  <X size={18} />
+                </button>
+
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-50 text-primary-700 ring-1 ring-primary-100">
+                  <Check size={23} strokeWidth={2.5} />
+                </div>
+                <p className="mt-5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary-700">
+                  <Sparkles size={13} /> Message transmis à la FSCPE
+                </p>
+                <h2 id="contact-receipt-title" className="font-display mt-2 text-2xl font-bold text-navy-950">
+                  Merci, {receipt.name}
+                </h2>
+                <p id="contact-receipt-description" className="mt-2 text-sm leading-relaxed text-navy-600">
+                  Votre demande a bien été reçue. Notre équipe vous répondra sous 24 à 48 heures à{" "}
+                  <span className="font-semibold text-navy-800">{receipt.email}</span>.
+                </p>
+
+                <div className="mt-6 border-y border-navy-100 py-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-navy-400">
+                    Récapitulatif de votre demande
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-navy-900">{receipt.subject}</p>
+                  <div className="mt-3 max-h-36 overflow-y-auto rounded-lg bg-navy-50/80 px-3.5 py-3">
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-navy-700">{receipt.message}</p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReceipt(null);
+                    requestAnimationFrame(() => submitButtonRef.current?.focus({ preventScroll: true }));
+                  }}
+                  className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary-700 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary-200"
+                >
+                  <Check size={16} /> Terminer
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </form>
   );
 }

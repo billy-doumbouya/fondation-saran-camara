@@ -35,8 +35,8 @@ export const contactSchema = yup.object({
     .boolean()
     .oneOf([true], "Vous devez accepter que vos données soient traitées.")
     .required(),
-  // Honeypot — doit rester vide
-  website: yup.string().max(0, "Champ invalide.").optional(),
+  // Keep server-side honeypot checks, but ignore browser autofill on the client.
+  website: yup.string().transform(() => "").optional(),
 });
 export type ContactFormValues = yup.InferType<typeof contactSchema>;
 
@@ -208,6 +208,7 @@ export const eventSchema = yup.object({
   startAt: yup.string().required("Date de début requise"),
   endAt: yup.string().nullable().optional(),
   coverImageUrl: yup.string().url().nullable().optional(),
+  coverImagePublicId: yup.string().nullable().optional(),
   published: yup.boolean().default(true),
 });
 export type EventFormValues = yup.InferType<typeof eventSchema>;

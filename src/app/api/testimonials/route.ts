@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { HOMEPAGE_CACHE_TAGS, revalidateHomepageData } from "@/lib/homepage-cache";
 import { isAuthenticated } from "@/lib/auth";
 import { testimonialsRepo } from "@/lib/db/repo";
 import { testimonialSchema } from "@/lib/validations";
@@ -17,6 +18,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = await testimonialSchema.validate(body, { stripUnknown: true });
     const [created] = await testimonialsRepo.create(data);
+    revalidateHomepageData(HOMEPAGE_CACHE_TAGS.testimonials);
     return NextResponse.json(created, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Requête invalide.";

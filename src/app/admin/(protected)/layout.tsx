@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Script from "next/script";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import ProtectedAdminHeader from "@/components/admin/ProtectedAdminHeader";
 
@@ -16,6 +17,13 @@ export default function ProtectedAdminLayout({
 }) {
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 antialiased font-sans selection:bg-gold-500 selection:text-navy-950">
+      {/* Chargement global unique du widget Cloudinary pour tout le back-office */}
+      <Script
+        id="cloudinary-upload-widget"
+        src="https://upload-widget.cloudinary.com/global/all.js"
+        strategy="afterInteractive"
+      />
+
       <AdminSidebar />
 
       <div className="min-w-0 lg:pl-64">

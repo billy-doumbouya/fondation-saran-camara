@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { HOMEPAGE_CACHE_TAGS, revalidateHomepageData } from "@/lib/homepage-cache";
 import { isAuthenticated } from "@/lib/auth";
 import { newsRepo } from "@/lib/db/repo";
 import { newsSchema } from "@/lib/validations";
@@ -18,6 +19,7 @@ export async function POST(request: NextRequest) {
     const data = await newsSchema.validate(body, { stripUnknown: true });
     const publishedAt = data.published ? new Date() : null;
     const [created] = await newsRepo.create({ ...data, publishedAt });
+    revalidateHomepageData(HOMEPAGE_CACHE_TAGS.news);
     return NextResponse.json(created, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Requête invalide.";

@@ -1,4 +1,4 @@
-import { desc, eq, asc, like } from "drizzle-orm";
+import { desc, eq, asc, like, inArray } from "drizzle-orm";
 import { db } from "./index";
 import {
   news,
@@ -32,6 +32,13 @@ export const newsRepo = {
       .from(news)
       .where(eq(news.published, true))
       .orderBy(desc(news.publishedAt)),
+  listFeatured: () =>
+    db
+      .select()
+      .from(news)
+      .where(eq(news.published, true))
+      .orderBy(desc(news.publishedAt))
+      .limit(3),
   listAll: () => db.select().from(news).orderBy(desc(news.createdAt)),
   getBySlug: (slug: string) =>
     db
@@ -65,6 +72,13 @@ export const testimonialsRepo = {
       .from(testimonials)
       .where(eq(testimonials.published, true))
       .orderBy(desc(testimonials.createdAt)),
+  listFeatured: () =>
+    db
+      .select()
+      .from(testimonials)
+      .where(eq(testimonials.published, true))
+      .orderBy(desc(testimonials.createdAt))
+      .limit(3),
   listAll: () =>
     db.select().from(testimonials).orderBy(desc(testimonials.createdAt)),
   getById: (id: number) =>
@@ -122,6 +136,13 @@ export const programsRepo = {
       .from(programs)
       .where(eq(programs.published, true))
       .orderBy(desc(programs.createdAt)),
+  listFeatured: async (): Promise<Program[]> =>
+    db
+      .select()
+      .from(programs)
+      .where(eq(programs.published, true))
+      .orderBy(desc(programs.createdAt))
+      .limit(3),
   listAll: async (): Promise<Program[]> =>
     db.select().from(programs).orderBy(desc(programs.createdAt)),
   getBySlug: async (slug: string): Promise<Program | null> =>
@@ -246,6 +267,14 @@ export const donationsRepo = {
 };
 /* -------------------------- SETTINGS -------------------------- */
 export const settingsRepo = {
+  getMany: async (keys: string[]) => {
+    if (keys.length === 0) return {};
+    const rows = await db
+      .select({ key: settings.key, value: settings.value })
+      .from(settings)
+      .where(inArray(settings.key, keys));
+    return Object.fromEntries(rows.map(({ key, value }) => [key, value]));
+  },
   get: (key: string, fallback: string | null = null) =>
     db
       .select()

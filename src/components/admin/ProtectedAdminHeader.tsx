@@ -10,16 +10,24 @@ import {
   X,
   Search,
   ExternalLink,
-  Plus,
+  ChevronRight,
+  Inbox,
+  Calendar,
+  FileText,
+  HeartHandshake,
 } from "lucide-react";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState, useRef, useCallback } from "react";
 import CommandPalette from "@/components/admin/ui/CommandPalette";
 
-type NotificationItem = {
+export type NotificationItem = {
+  id: string;
   title: string;
   description: string;
   accent: "primary" | "gold" | "navy";
+  href: string;
+  count?: number;
 };
 
 const BREADCRUMB_MAP: Record<string, { category: string; title: string }> = {
@@ -73,54 +81,63 @@ const HELP_MAP: Record<string, { title: string; text: string }> = {
 
 export default function ProtectedAdminHeader() {
   const pathname = usePathname();
+  const router = useRouter();
   const [helpOpen, setHelpOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [totalNotificationCount, setTotalNotificationCount] = useState(0);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
 
-  // Écouteur global pour ouvrir la Command Palette via Ctrl+K ou Cmd+K
+  const notifRef = useRef<HTMLDivElement>(null);
+  const helpRef = useRef<HTMLDivElement>(null);
+
+  // Charger les notifications depuis la base de données
+  const loadNotifications = useCallback(async () => {
+    try {
+      setLoadingNotifications(true);
+      const res = await fetch("/api/admin/notifications", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        const items = Array.isArray(data.items) ? data.items : [];
+        setNotifications(items);
+        setTotalNotificationCount(data.totalCount || items.length);
+      }
+    } catch {
+      // Ignorer silencieusement si hors-ligne
+    } finally {
+      setLoadingNotifications(false);
+    }
+  }, []);
+
+  // Chargement initial + rafraîchissement périodique (toutes les 90s)
+  useEffect(() => {
+    loadNotifications();
+    const interval = setInterval(loadNotifications, 90000);
+    return () => clearInterval(interval);
+  }, [loadNotifications]);
+
+  // Fermeture automatique lors du changement de route (navigation)
+  useEffect(() => {
+    setNotificationsOpen(false);
+    setHelpOpen(false);
+  }, [pathname]);
+
+  // Fermeture automatique sur touche Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setCommandPaletteOpen((prev) => !prev);
       }
+      if (e.key === "Escape") {
+        setNotificationsOpen(false);
+        setHelpOpen(false);
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
-
-  useEffect(() => {
-    if (!notificationsOpen) return;
-
-    let active = true;
-
-    const loadNotifications = async () => {
-      setLoadingNotifications(true);
-      try {
-        const response = await fetch("/api/admin/notifications", {
-          cache: "no-store",
-        });
-        if (!response.ok) {
-          throw new Error("Impossible de charger les notifications");
-        }
-
-        const payload = await response.json();
-        const items = Array.isArray(payload.items) ? payload.items : [];
-        if (active) setNotifications(items);
-      } catch {
-        if (active) setNotifications([]);
-      } finally {
-        if (active) setLoadingNotifications(false);
-      }
-    };
-
-    void loadNotifications();
-    return () => {
-      active = false;
-    };
-  }, [notificationsOpen]);
 
   const currentBreadcrumb = BREADCRUMB_MAP[pathname] ?? {
     category: "FSCPE Console",
@@ -133,6 +150,11 @@ export default function ProtectedAdminHeader() {
   };
 
   const hasNotifications = notifications.length > 0;
+
+  const handleNotificationClick = (href: string) => {
+    setNotificationsOpen(false);
+    router.push(href);
+  };
 
   return (
     <>
@@ -152,7 +174,7 @@ export default function ProtectedAdminHeader() {
           </div>
         </div>
 
-        {/* Centre / Droite : Command Palette trigger + Status + Actions */}
+        {/* Centre / Droite : Command Palette + Status + Actions */}
         <div className="flex items-center gap-2 sm:gap-3 text-slate-600">
           {/* Bouton de recherche globale Command Palette (Ctrl+K) */}
           <button
@@ -198,13 +220,14 @@ export default function ProtectedAdminHeader() {
             <CircleHelp size={18} />
           </button>
 
-          {/* Notifications */}
+          {/* Cloche de Notifications connectée à la base de données */}
           <button
             type="button"
-            aria-label="Notifications"
+            aria-label="Notifications administrateur"
             onClick={() => {
               setHelpOpen(false);
               setNotificationsOpen((prev) => !prev);
+              if (!notificationsOpen) loadNotifications();
             }}
             className={`relative rounded-xl p-2 transition-colors ${
               notificationsOpen
@@ -214,7 +237,9 @@ export default function ProtectedAdminHeader() {
           >
             <Bell size={18} />
             {hasNotifications && (
-              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-gold-500 ring-2 ring-white" />
+              <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-500 px-1 text-[9px] font-bold text-white shadow-xs ring-2 ring-white">
+                {totalNotificationCount > 9 ? "9+" : totalNotificationCount}
+              </span>
             )}
           </button>
 
@@ -241,140 +266,199 @@ export default function ProtectedAdminHeader() {
         onClose={() => setCommandPaletteOpen(false)}
       />
 
-      {/* Volet Aide rapide */}
+      {/* Volet Aide rapide avec fermeture automatique */}
       <AnimatePresence>
         {helpOpen && (
-          <motion.aside
-            initial={{ opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18 }}
-            className="absolute right-4 top-20 z-40 w-[min(26rem,calc(100vw-2rem))] rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl sm:right-8 lg:right-10"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-2 text-primary-700">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-50">
-                  <Sparkles size={16} />
+          <>
+            {/* Backdrop transparent pour auto-fermeture au clic extérieur */}
+            <div
+              onClick={() => setHelpOpen(false)}
+              className="fixed inset-0 z-35 bg-transparent"
+              aria-hidden="true"
+            />
+            <motion.aside
+              ref={helpRef}
+              initial={{ opacity: 0, y: -10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.98 }}
+              transition={{ duration: 0.15 }}
+              className="fixed inset-x-4 top-18 z-40 sm:absolute sm:inset-x-auto sm:right-6 sm:top-20 w-auto sm:w-[min(26rem,calc(100vw-2rem))] rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2 text-primary-700">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-50">
+                    <Sparkles size={16} />
+                  </div>
+                  <p className="text-xs font-bold uppercase tracking-[0.18em]">
+                    Aide & Recommandations
+                  </p>
                 </div>
-                <p className="text-xs font-bold uppercase tracking-[0.18em]">
-                  Aide & Recommandations
+                <button
+                  type="button"
+                  onClick={() => setHelpOpen(false)}
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                  aria-label="Fermer l’aide"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="mt-4 rounded-xl bg-slate-50 border border-slate-100 p-3.5">
+                <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-primary-700">
+                  Section active
+                </p>
+                <p className="mt-1 font-display text-base font-bold text-navy-950">
+                  {helpContent.title}
+                </p>
+                <p className="mt-2 text-xs leading-relaxed text-slate-600">
+                  {helpContent.text}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setHelpOpen(false)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                aria-label="Fermer l’aide"
-              >
-                <X size={16} />
-              </button>
-            </div>
 
-            <div className="mt-4 rounded-xl bg-slate-50 border border-slate-100 p-3.5">
-              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-primary-700">
-                Section active
-              </p>
-              <p className="mt-1 font-display text-base font-bold text-navy-950">
-                {helpContent.title}
-              </p>
-              <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                {helpContent.text}
-              </p>
-            </div>
-
-            <div className="mt-4 space-y-2 text-xs">
-              <a
-                href="/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2.5 font-medium text-slate-700 hover:border-gold-400 hover:bg-slate-50 transition-colors"
-              >
-                <span>Aperçu du site public</span>
-                <ArrowUpRight size={14} className="text-primary-700" />
-              </a>
-              <button
-                type="button"
-                onClick={() => {
-                  setHelpOpen(false);
-                  setCommandPaletteOpen(true);
-                }}
-                className="flex w-full items-center justify-between rounded-xl border border-slate-200 px-3 py-2.5 font-medium text-slate-700 hover:border-gold-400 hover:bg-slate-50 transition-colors text-left"
-              >
-                <span>Recherche globale (Ctrl+K)</span>
-                <Search size={14} className="text-primary-700" />
-              </button>
-            </div>
-          </motion.aside>
+              <div className="mt-4 space-y-2 text-xs">
+                <a
+                  href="/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between rounded-xl border border-slate-200 px-3 py-2.5 font-medium text-slate-700 hover:border-gold-400 hover:bg-slate-50 transition-colors"
+                >
+                  <span>Aperçu du site public</span>
+                  <ArrowUpRight size={14} className="text-primary-700" />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHelpOpen(false);
+                    setCommandPaletteOpen(true);
+                  }}
+                  className="flex w-full items-center justify-between rounded-xl border border-slate-200 px-3 py-2.5 font-medium text-slate-700 hover:border-gold-400 hover:bg-slate-50 transition-colors text-left"
+                >
+                  <span>Recherche globale (Ctrl+K)</span>
+                  <Search size={14} className="text-primary-700" />
+                </button>
+              </div>
+            </motion.aside>
+          </>
         )}
       </AnimatePresence>
 
-      {/* Volet Notifications */}
+      {/* Volet Notifications connecté à la DB avec fermeture automatique & responsive */}
       <AnimatePresence>
         {notificationsOpen && (
-          <motion.aside
-            initial={{ opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18 }}
-            className="absolute right-4 top-20 z-40 w-[min(24rem,calc(100vw-2rem))] rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl sm:right-8 lg:right-10"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Bell size={16} className="text-primary-700" />
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-navy-950">
-                  Centre de notifications
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setNotificationsOpen(false)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                aria-label="Fermer les notifications"
-              >
-                <X size={16} />
-              </button>
-            </div>
+          <>
+            {/* Backdrop pour auto-fermeture immédiate au clic extérieur */}
+            <div
+              onClick={() => setNotificationsOpen(false)}
+              className="fixed inset-0 z-35 bg-black/10 backdrop-blur-[1px]"
+              aria-hidden="true"
+            />
 
-            <div className="mt-4 space-y-2.5">
-              {loadingNotifications && (
-                <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-center text-xs text-slate-500">
-                  Chargement des alertes en cours…
-                </div>
-              )}
-
-              {!loadingNotifications && notifications.length === 0 && (
-                <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-center text-xs text-slate-500">
-                  Aucune alerte prioritaire en attente. Tout est sous contrôle !
-                </div>
-              )}
-
-              {!loadingNotifications &&
-                notifications.map((item) => (
-                  <div
-                    key={`${item.title}-${item.description}`}
-                    className="rounded-xl border border-slate-200 p-3 hover:border-gold-300 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`h-2 w-2 rounded-full ${
-                          item.accent === "primary"
-                            ? "bg-primary-600"
-                            : item.accent === "gold"
-                            ? "bg-gold-500"
-                            : "bg-navy-600"
-                        }`}
-                      />
-                      <p className="text-xs font-bold text-navy-950">
-                        {item.title}
-                      </p>
-                    </div>
-                    <p className="mt-1 text-xs leading-relaxed text-slate-500">
-                      {item.description}
+            <motion.aside
+              ref={notifRef}
+              initial={{ opacity: 0, y: -10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8, scale: 0.98 }}
+              transition={{ duration: 0.15 }}
+              className="fixed inset-x-3 top-18 z-40 sm:absolute sm:inset-x-auto sm:right-6 sm:top-20 w-auto sm:w-[24rem] max-h-[calc(100vh-6rem)] overflow-y-auto rounded-3xl border border-slate-200 bg-white p-5 shadow-2xl"
+            >
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary-100 text-primary-700">
+                    <Bell size={15} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.14em] text-navy-950">
+                      Notifications
+                    </p>
+                    <p className="text-[11px] text-slate-500">
+                      Synchronisé avec la base de données
                     </p>
                   </div>
-                ))}
-            </div>
-          </motion.aside>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setNotificationsOpen(false)}
+                  className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                  aria-label="Fermer les notifications"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="mt-3.5 space-y-2.5">
+                {loadingNotifications && (
+                  <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-center text-xs text-slate-500">
+                    <span className="inline-block animate-pulse">
+                      Vérification des alertes en direct...
+                    </span>
+                  </div>
+                )}
+
+                {!loadingNotifications && notifications.length === 0 && (
+                  <div className="rounded-2xl border border-slate-100 bg-emerald-50/40 p-6 text-center">
+                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 mb-2">
+                      <ShieldCheck size={20} />
+                    </div>
+                    <p className="text-xs font-semibold text-emerald-900">
+                      Tout est à jour !
+                    </p>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Aucun message non lu ou action requise pour le moment.
+                    </p>
+                  </div>
+                )}
+
+                {!loadingNotifications &&
+                  notifications.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleNotificationClick(item.href)}
+                      className="group flex w-full items-start justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white p-3.5 text-left transition-all hover:border-primary-400 hover:bg-primary-50/20 hover:shadow-xs"
+                    >
+                      <div className="flex items-start gap-3">
+                        <span
+                          className={`mt-1 flex h-2 w-2 shrink-0 rounded-full ${
+                            item.accent === "primary"
+                              ? "bg-primary-600 ring-4 ring-primary-100"
+                              : item.accent === "gold"
+                              ? "bg-amber-500 ring-4 ring-amber-100"
+                              : "bg-navy-600 ring-4 ring-navy-100"
+                          }`}
+                        />
+                        <div>
+                          <p className="text-xs font-bold text-navy-950 group-hover:text-primary-800 transition-colors">
+                            {item.title}
+                          </p>
+                          <p className="mt-0.5 text-xs text-slate-500 leading-snug">
+                            {item.description}
+                          </p>
+                        </div>
+                      </div>
+                      <ChevronRight
+                        size={15}
+                        className="shrink-0 text-slate-300 group-hover:text-primary-600 group-hover:translate-x-0.5 transition-all mt-1"
+                      />
+                    </button>
+                  ))}
+              </div>
+
+              {notifications.length > 0 && (
+                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                  <span>{totalNotificationCount} alerte(s) active(s)</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      loadNotifications();
+                    }}
+                    className="font-semibold text-primary-700 hover:underline"
+                  >
+                    Actualiser
+                  </button>
+                </div>
+              )}
+            </motion.aside>
+          </>
         )}
       </AnimatePresence>
     </>
