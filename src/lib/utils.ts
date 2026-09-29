@@ -6,7 +6,11 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatGNF(amount: number): string {
-  return new Intl.NumberFormat("fr-FR").format(amount) + " GNF";
+  return new Intl.NumberFormat("fr-GN", {
+    style: "currency",
+    currency: "GNF",
+    maximumFractionDigits: 0,
+  }).format(amount);
 }
 
 export function formatDate(date: string | Date): string {
@@ -18,8 +22,10 @@ export function formatDate(date: string | Date): string {
   }).format(d);
 }
 
-export function formatDateTime(date: string | Date): string {
-  const d = typeof date === "string" ? new Date(date) : date;
+export function formatDateTime(iso: string | Date | null | undefined): string {
+  if (!iso) return "";
+  const d = typeof iso === "string" ? new Date(iso) : iso;
+  if (Number.isNaN(d.getTime())) return "";
   return new Intl.DateTimeFormat("fr-FR", {
     day: "2-digit",
     month: "long",
@@ -42,4 +48,18 @@ export function generateReference(prefix = "FSCPE"): string {
   const now = Date.now().toString(36).toUpperCase();
   const rand = Math.random().toString(36).slice(2, 8).toUpperCase();
   return `${prefix}-${now}-${rand}`;
+}
+
+export function getEventDay(iso: string | Date): { day: string; month: string; year: string } {
+  const d = typeof iso === "string" ? new Date(iso) : iso;
+  return {
+    day: String(d.getDate()).padStart(2, "0"),
+    month: d.toLocaleDateString("fr-FR", { month: "short" }).replace(".", ""),
+    year: String(d.getFullYear()),
+  };
+}
+
+export function isUpcoming(iso: string | Date): boolean {
+  const d = typeof iso === "string" ? new Date(iso) : iso;
+  return d.getTime() >= Date.now();
 }

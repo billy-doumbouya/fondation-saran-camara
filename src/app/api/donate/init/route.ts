@@ -5,6 +5,8 @@ import { initGeniusPayPayment } from "@/lib/geniuspay";
 import { generateReference } from "@/lib/utils";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 
 const PUSH_METHODS = new Set(["pawapay", "orange_money", "mtn_money", "moov_money", "airtel_money"]);
 const REDIRECT_METHODS = new Set(["card", "wave", "paystack", "checkout"]);
@@ -81,11 +83,12 @@ export async function POST(request: NextRequest) {
       warning: result.fallbackNotice,
     });
   } catch (err) {
+    console.error("DONATE INIT ERROR:", err);
     const rawMessage = err instanceof Error ? err.message : "Impossible d'initier le paiement.";
     const message = /paymentMethod\s+".*"\s+inconnu/i.test(rawMessage)
       ? "Le mode de paiement sélectionné n'est pas disponible pour votre pays. Merci de choisir une autre option."
       : rawMessage;
     const status = /GeniusPay|n[’']a pas répondu|timeout|indisponible/i.test(rawMessage) ? 502 : 400;
-    return NextResponse.json({ error: message }, { status });
+    return NextResponse.json({ error: message, details: String(err) }, { status });
   }
 }

@@ -3,6 +3,8 @@ import { donationsRepo } from "@/lib/db/repo";
 import { isValidGeniusPaySignature } from "@/lib/geniuspay";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 
 export async function POST(request: NextRequest) {
   const rawBody = await request.text();

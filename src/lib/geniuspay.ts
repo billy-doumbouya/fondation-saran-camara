@@ -181,7 +181,7 @@ export async function initGeniusPayPayment(
   const shouldFallbackToCheckout =
     !isCheckout && isKnownMethod && shouldUseCheckoutFallback(method, country);
   const isPush = PUSH_PAYMENT_METHODS.has(method) && !shouldFallbackToCheckout;
-  const isRedirect = REDIRECT_PAYMENT_METHODS.has(method) && !shouldFallbackToCheckout;
+  const _isRedirect = REDIRECT_PAYMENT_METHODS.has(method) && !shouldFallbackToCheckout;
 
   if (!isCheckout && !isKnownMethod) {
     throw new Error(`paymentMethod "${method}" inconnu.`);

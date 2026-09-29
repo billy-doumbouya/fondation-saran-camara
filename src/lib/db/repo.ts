@@ -1,4 +1,4 @@
-import { desc, eq, asc } from "drizzle-orm";
+import { desc, eq, asc, like } from "drizzle-orm";
 import { db } from "./index";
 import {
   news,
@@ -13,11 +13,16 @@ import {
   settings,
   type NewNews,
   type NewTestimonial,
+  type TeamMember,
   type NewTeamMember,
+  type GalleryImage,
   type NewGalleryImage,
   type NewProgram,
+  type Program,
   type NewEventItem,
 } from "./schema";
+
+export type { TeamMember, NewTeamMember, GalleryImage, NewGalleryImage, Program, NewProgram };
 
 /* -------------------------- NEWS -------------------------- */
 export const newsRepo = {
@@ -83,7 +88,7 @@ export const testimonialsRepo = {
 
 /* -------------------------- TEAM -------------------------- */
 export const teamRepo = {
-  listAll: () =>
+  listAll: (): Promise<TeamMember[]> =>
     db.select().from(teamMembers).orderBy(asc(teamMembers.displayOrder)),
   getById: (id: number) =>
     db
@@ -101,7 +106,7 @@ export const teamRepo = {
 
 /* ------------------------- GALLERY ------------------------- */
 export const galleryRepo = {
-  listAll: () =>
+  listAll: (): Promise<GalleryImage[]> =>
     db.select().from(galleryImages).orderBy(desc(galleryImages.createdAt)),
   create: (data: NewGalleryImage) =>
     db.insert(galleryImages).values(data).returning(),
@@ -111,20 +116,21 @@ export const galleryRepo = {
 
 /* ------------------------ PROGRAMS ------------------------ */
 export const programsRepo = {
-  listPublished: () =>
+  listPublished: async (): Promise<Program[]> =>
     db
       .select()
       .from(programs)
       .where(eq(programs.published, true))
       .orderBy(desc(programs.createdAt)),
-  listAll: () => db.select().from(programs).orderBy(desc(programs.createdAt)),
-  getBySlug: (slug: string) =>
+  listAll: async (): Promise<Program[]> =>
+    db.select().from(programs).orderBy(desc(programs.createdAt)),
+  getBySlug: async (slug: string): Promise<Program | null> =>
     db
       .select()
       .from(programs)
       .where(eq(programs.slug, slug))
       .limit(1)
-      .then((r) => r[0]),
+      .then((r) => r[0] ?? null),
   getById: (id: number) =>
     db
       .select()
@@ -166,6 +172,31 @@ export const partnersRepo = {
 };
 
 /* ---------------------- CONTACT FORM ---------------------- */
+export interface ContactMessageInput {
+  name: string;
+  email: string;
+  phone: string | null;
+  subject: string;
+  message: string;
+  ip?: string;
+}
+
+export const contactMessagesRepo = {
+  create: async (input: ContactMessageInput) => {
+    return db
+      .insert(contactMessages)
+      .values({
+        name: input.name,
+        email: input.email,
+        phone: input.phone,
+        subject: input.subject,
+        message: input.message,
+        isRead: false,
+      })
+      .returning();
+  },
+};
+
 export const contactRepo = {
   create: (data: {
     name: string;
@@ -222,11 +253,60 @@ export const settingsRepo = {
       .where(eq(settings.key, key))
       .limit(1)
       .then((r) => r[0]?.value ?? fallback),
+  has: (key: string) =>
+    db
+      .select({ key: settings.key })
+      .from(settings)
+      .where(eq(settings.key, key))
+      .limit(1)
+      .then((r) => r.length > 0),
+  listByPrefix: async (prefix: string) =>
+    db
+      .select()
+      .from(settings)
+      .where(like(settings.key, `${prefix}%`))
+      .orderBy(desc(settings.updatedAt)),
+  listNewsletterSubscribers: async () => {
+    const rows = await settingsRepo.listByPrefix("newsletter:");
+
+    return rows
+      .map((row) => {
+        let payload: {
+          email?: string;
+          subscribedAt?: string;
+          ip?: string | null;
+          source?: string;
+        } | null = null;
+
+        try {
+          payload = row.value ? JSON.parse(row.value) : null;
+        } catch {
+          payload = null;
+        }
+
+        const email = payload?.email || row.key.replace(/^newsletter:/, "");
+
+        return {
+          key: row.key,
+          email,
+          subscribedAt: payload?.subscribedAt ?? row.updatedAt?.toISOString?.() ?? null,
+          ip: payload?.ip ?? null,
+          source: payload?.source ?? "footer",
+          updatedAt: row.updatedAt,
+        };
+      })
+      .sort((a, b) => new Date(b.subscribedAt ?? 0).getTime() - new Date(a.subscribedAt ?? 0).getTime());
+  },
   set: (key: string, value: string) =>
     db
       .insert(settings)
       .values({ key, value })
-      .onConflictDoUpdate({ target: settings.key, set: { value } }),
+      .onConflictDoUpdate({ target: settings.key, set: { value, updatedAt: new Date() } }),
+  remove: (key: string) => db.delete(settings).where(eq(settings.key, key)),
+};
+
+export const newsletterRepo = {
+  listAll: () => settingsRepo.listNewsletterSubscribers(),
 };
 
 /**

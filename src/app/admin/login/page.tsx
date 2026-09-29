@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useMutation } from "@tanstack/react-query";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Eye, EyeOff, Lock, Loader2, ShieldCheck } from "lucide-react";
 import { Canvas, useFrame } from "@react-three/fiber";
@@ -59,7 +59,6 @@ function Background3DScene() {
 // 2. FORMULAIRE DE CONNEXION & PORTRAIT
 // ==========================================
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -84,8 +83,14 @@ function LoginForm() {
     },
     onSuccess: () => {
       toast.success("Bienvenue, Madame Camara.");
-      router.push(searchParams.get("next") || "/admin/dashboard");
-      router.refresh();
+      const nextPath = searchParams.get("next");
+      const destination =
+        nextPath?.startsWith("/") && !nextPath.startsWith("//")
+          ? nextPath
+          : "/admin/dashboard";
+
+      // Recharge la requête avec le cookie de session déjà posé par l'API.
+      window.location.assign(destination);
     },
     onError: (err: Error) => toast.error(err.message),
   });

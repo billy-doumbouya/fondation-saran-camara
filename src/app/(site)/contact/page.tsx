@@ -1,198 +1,155 @@
-"use client";
+import type { Metadata } from "next";
+import AnimatedSection from "@/components/site/animated-section";
+import ContactForm from "@/components/site/contact-form";
+import {
+  ContactInteractiveCards,
+  ContactFaqSection,
+} from "@/components/site/contact-interactive";
+import AtmosphereBackground from "@/components/site/ambient/AtmosphereBackground";
+import ComplexGeometricOverlay from "@/components/site/ambient/ComplexGeometricOverlay";
+import { Sparkles, Shield, HeartHandshake } from "lucide-react";
 
-import React, { useRef } from "react";
-import Image from "next/image";
-import { Mail, MapPin, Phone, Clock, Send } from "lucide-react";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { Float, Sparkles } from "@react-three/drei";
-import * as THREE from "three";
+export const metadata: Metadata = {
+  title: "Contact & Échanges — Fondation Saran Camara (FSCPE)",
+  description:
+    "Échangez directement avec l'équipe de la Fondation Saran Camara à Conakry. Dons, parrainage, partenariats ou volontariat : nous répondons sous 24 à 48 heures.",
+};
 
-import AnimatedSection from "@/components/site/AnimatedSection";
-import InstitutionalHero from "@/components/site/InstitutionalHero";
-import ContactForm from "@/components/site/ContactForm";
-import { BRAND } from "@/lib/site-data";
+export const dynamic = "force-dynamic";
 
-// Image Unsplash d'arrière-plan (Humanitaire / Écoute / Communauté)
-const CONTACT_HERO_BG =
-  "https://images.unsplash.com/photo-1532629345422-7515f3d16bb0?q=80&w=1920&auto=format&fit=crop";
-
-// ==========================================
-// 1. EFFET 3D D'EN-TÊTE INTERACTIF
-// ==========================================
-function Contact3DHeader() {
-  const meshRef = useRef<THREE.Mesh>(null!);
-
-  useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.x = Math.sin(state.clock.getElapsedTime() * 0.4) * 0.15;
-      meshRef.current.rotation.y += 0.005;
-    }
-  });
-
-  return (
-    <>
-      <ambientLight intensity={0.7} />
-      <directionalLight position={[5, 5, 5]} intensity={1.2} color="#4bb56d" />
-
-      {/* Anneau 3D Flottant et Rotatif */}
-      <Float speed={2} rotationIntensity={1.5} floatIntensity={1.2}>
-        <mesh ref={meshRef} position={[3, 0.5, -2]}>
-          <torusGeometry args={[1.6, 0.4, 16, 50]} />
-          <meshStandardMaterial
-            color="#2f9950"
-            wireframe
-            transparent
-            opacity={0.25}
-            emissive="#227a3f"
-            emissiveIntensity={0.5}
-          />
-        </mesh>
-      </Float>
-
-      {/* Particules Lumineuses FSCPE */}
-      <Sparkles count={50} scale={10} size={3} speed={0.5} opacity={0.7} color="#4bb56d" />
-      <Sparkles count={30} scale={8} size={4} speed={0.8} opacity={0.8} color="#e3b32c" />
-    </>
-  );
-}
-
-// ==========================================
-// 2. COMPOSANT PAGE CONTACT
-// ==========================================
 export default function ContactPage() {
   return (
-    <>
-      <InstitutionalHero
-        image={CONTACT_HERO_BG}
-        imageAlt="Échange avec la Fondation"
-        eyebrow="Contact"
-        title="Nous sommes à votre écoute"
-        description="Une question, une envie d'engagement ou un partenariat ? Contactez l'équipe de la Fondation."
-        badge={<span className="text-sm text-white/85">Une équipe disponible pour vous répondre</span>}
+    <div className="relative overflow-hidden bg-[#faf9f5]">
+      {/* ——— Hero de Page avec WebGL 3D Mesh & Guilloché Géométrique ——— */}
+      <AtmosphereBackground
+        variant="dark"
+        enable3dMesh={true}
+        enableGeometry={true}
+        showSacredCircles={true}
+        className="pb-24 pt-32 text-white sm:pb-32 sm:pt-40"
       >
-        <div className="pointer-events-none absolute inset-0 opacity-60">
-          <Canvas camera={{ position: [0, 0, 5], fov: 60 }} dpr={[1, 2]}>
-            <Contact3DHeader />
-          </Canvas>
-        </div>
-      </InstitutionalHero>
+        {/* Texture photographique subtile pour laisser rayonner le WebGL 3D et le guilloché or */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-0 opacity-15 mix-blend-overlay"
+          style={{
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1600&q=80')",
+            backgroundPosition: "center",
+            backgroundSize: "cover",
+          }}
+        />
 
-      {/* SECTION CONTENU & FORMULAIRE */}
-      <div className="container-app py-16">
-        <div className="grid gap-10 lg:grid-cols-5">
-          {/* CARTE DES INFORMATIONS DE CONTACT */}
-          <AnimatedSection direction="left" className="lg:col-span-2">
-            <div className="h-full rounded-3xl border border-navy-100/80 bg-white p-8 shadow-md transition-all duration-300 hover:border-primary-200 hover:shadow-xl flex flex-col justify-between">
-              <div>
-                <div className="relative mb-7 h-40 overflow-hidden rounded-2xl bg-navy-100">
-                  <Image
-                    src="https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=900&auto=format&fit=crop"
-                    alt="Équipe en échange autour d'un projet"
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 40vw"
-                    className="object-cover"
+
+        <div className="container-app relative z-10">
+          <AnimatedSection direction="up">
+            <div className="mx-auto max-w-3xl text-center">
+              {/* Badge d'engagement avec pulsation d'état */}
+              <div className="inline-flex items-center gap-2 rounded-full border border-gold-500/40 bg-gold-500/10 px-4 py-1.5 text-xs font-semibold text-gold-300 backdrop-blur-md shadow-lg shadow-gold-500/5">
+                <span className="flex h-2 w-2 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-gold-500"></span>
+                </span>
+                <span className="font-mono uppercase tracking-widest text-[0.6875rem]">
+                  Écoute & Partenariat · Conakry
+                </span>
+              </div>
+
+              {/* Titre Maître à contraste pur */}
+              <h1 className="font-display mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-6xl drop-shadow-sm">
+                Bâtissons ensemble un{" "}
+                <span className="bg-gradient-to-r from-gold-300 via-gold-200 to-primary-300 bg-clip-text text-transparent">
+                  avenir digne
+                </span>{" "}
+                pour chaque enfant.
+              </h1>
+
+              {/* Sous-titre avec lisibilité optimale garantie */}
+              <p className="mt-5 text-base font-light leading-relaxed text-navy-100 sm:text-lg max-w-2xl mx-auto">
+                Que vous soyez un particulier souhaitant parrainer un orphelin,
+                une entreprise désireuse de concrétiser son engagement RSE, ou
+                une institution internationale, notre direction vous répond avec
+                rigueur et bienveillance.
+              </p>
+
+              {/* Piliers de confiance rapides */}
+              <div className="mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs text-navy-200">
+                <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 backdrop-blur-md">
+                  <Sparkles size={15} className="text-gold-400" />
+                  <span>Réponse garantie sous 24h à 48h</span>
+                </div>
+                <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 backdrop-blur-md">
+                  <Shield size={15} className="text-primary-400" />
+                  <span>ONG officiellement agréée en Guinée</span>
+                </div>
+                <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 backdrop-blur-md">
+                  <HeartHandshake size={15} className="text-emerald-400" />
+                  <span>100% de transparence et redevabilité</span>
+                </div>
+              </div>
+            </div>
+          </AnimatedSection>
+        </div>
+      </AtmosphereBackground>
+
+      {/* ——— Section Principale : Coordonnées Directes & Formulaire ——— */}
+      <section className="relative -mt-12 pb-24 sm:pb-32">
+        {/* Trame géométrique isométrique douce sur fond crème (zéro obstacle à la lecture) */}
+        <ComplexGeometricOverlay
+          variant="light"
+          opacity={0.25}
+          showSacredCircles={false}
+          className="pointer-events-none -z-10"
+        />
+
+        <div className="container-app relative z-10">
+          <div className="grid gap-8 lg:grid-cols-12 lg:items-start">
+            {/* Colonne Gauche : Canaux Directs, Carte Siège & Mot Fondatrice */}
+            <div className="lg:col-span-5">
+              <AnimatedSection direction="left">
+                <ContactInteractiveCards />
+              </AnimatedSection>
+            </div>
+
+            {/* Colonne Droite : Formulaire Tactile Haut de Gamme */}
+            <div id="formulaire" className="lg:col-span-7 scroll-mt-24">
+              <AnimatedSection direction="right" delay={0.1}>
+                <div className="relative overflow-hidden rounded-3xl border border-white/90 bg-white/95 p-7 shadow-2xl shadow-navy-950/10 backdrop-blur-2xl sm:p-10 md:p-12">
+                  {/* Liseré supérieur or & émeraude */}
+                  <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-primary-600 via-gold-500 to-primary-700" />
+
+                  {/* Lueurs ornementales d'angle */}
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -right-20 -top-20 h-60 w-60 rounded-full bg-gold-400/10 blur-3xl"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-navy-900/60 via-transparent to-transparent" />
-                  <span className="absolute bottom-3 left-4 text-xs font-semibold uppercase tracking-[0.16em] text-white">
-                    À votre écoute
-                  </span>
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-primary-500/10 blur-3xl"
+                  />
+
+                  <ContactForm />
                 </div>
-                <h3 className="font-display text-xl font-bold text-navy-900">
-                  Nos Coordonnées
-                </h3>
-                <p className="mt-2 text-sm text-navy-500 leading-relaxed">
-                  Retrouvez-nous à Conakry ou écrivez-nous directement par téléphone ou email.
-                </p>
-
-                <div className="mt-8 space-y-6">
-                  {/* Adresse */}
-                  <div className="group flex items-start gap-4">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600 transition-colors group-hover:bg-primary-500 group-hover:text-white">
-                      <MapPin size={20} />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-navy-400">
-                        Adresse
-                      </h4>
-                      <p className="mt-1 text-sm font-medium text-navy-800 leading-snug">
-                        {BRAND.address}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Téléphone */}
-                  <div className="group flex items-start gap-4">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600 transition-colors group-hover:bg-primary-500 group-hover:text-white">
-                      <Phone size={20} />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-navy-400">
-                        Téléphone
-                      </h4>
-                      <a
-                        href={`tel:${BRAND.phone}`}
-                        className="mt-1 block text-sm font-medium text-navy-800 transition-colors hover:text-primary-600"
-                      >
-                        {BRAND.phone}
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* Email */}
-                  <div className="group flex items-start gap-4">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600 transition-colors group-hover:bg-primary-500 group-hover:text-white">
-                      <Mail size={20} />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-navy-400">
-                        Email
-                      </h4>
-                      <a
-                        href={`mailto:${BRAND.email}`}
-                        className="mt-1 block text-sm font-medium text-navy-800 transition-colors hover:text-primary-600"
-                      >
-                        {BRAND.email}
-                      </a>
-                    </div>
-                  </div>
-
-                  {/* Horaires */}
-                  <div className="group flex items-start gap-4">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-50 text-primary-600 transition-colors group-hover:bg-primary-500 group-hover:text-white">
-                      <Clock size={20} />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-semibold uppercase tracking-wider text-navy-400">
-                        Horaires d&apos;ouverture
-                      </h4>
-                      <p className="mt-1 text-sm font-medium text-navy-800">
-                        Lundi – Vendredi : 08h00 – 17h00
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Encadré d'engagement */}
-              <div className="mt-10 rounded-2xl bg-primary-50/70 p-4 border border-primary-100">
-                <div className="flex items-center gap-2 text-primary-700 font-semibold text-xs uppercase tracking-wider">
-                  <Send size={14} /> Réponse rapide
-                </div>
-                <p className="mt-1 text-xs text-navy-600">
-                  Notre équipe s&apos;efforce de répondre à toutes les demandes sous 24h à 48h ouvrées.
-                </p>
-              </div>
+              </AnimatedSection>
             </div>
-          </AnimatedSection>
+          </div>
+        </div>
+      </section>
 
-          {/* FORMULAIRE DE CONTACT */}
-          <AnimatedSection direction="right" delay={0.1} className="lg:col-span-3">
-            <div className="rounded-3xl border border-navy-100/80 bg-white p-8 shadow-md transition-all duration-300 hover:shadow-xl">
-              <ContactForm />
-            </div>
+      {/* ——— Section FAQ & Réponses Immédiates ——— */}
+      <section id="faq" className="relative scroll-mt-20 border-t border-navy-100 bg-gradient-to-b from-white via-navy-50/40 to-white py-20 sm:py-28">
+        <ComplexGeometricOverlay
+          variant="light"
+          opacity={0.18}
+          showSacredCircles={false}
+          className="pointer-events-none -z-10"
+        />
+        <div className="container-app relative z-10">
+          <AnimatedSection direction="up">
+            <ContactFaqSection />
           </AnimatedSection>
         </div>
-      </div>
-    </>
+      </section>
+    </div>
   );
 }

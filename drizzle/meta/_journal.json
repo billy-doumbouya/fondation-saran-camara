@@ -15,6 +15,13 @@
       "when": 1788094466891,
       "tag": "0001_sparkling_iron_lad",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790643364524,
+      "tag": "0002_deep_tenebrous",
+      "breakpoints": true
     }
   ]
 }

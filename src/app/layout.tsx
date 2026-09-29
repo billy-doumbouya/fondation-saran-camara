@@ -14,6 +14,7 @@ import "@fontsource/poppins/500.css";
 import "@fontsource/poppins/600.css";
 import "@fontsource/poppins/700.css";
 import "@fontsource/poppins/800.css";
+import SmoothScroll from "@/components/site/SmoothScroll";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -87,7 +88,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ProgressBarProvider />
         </Suspense>
         <QueryProvider>
-          {children}
+          <SmoothScroll>
+            {children}
+          </SmoothScroll>
           <Toaster richColors position="top-center" />
         </QueryProvider>
       </body>

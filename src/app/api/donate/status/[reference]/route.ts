@@ -3,6 +3,8 @@ import { donationsRepo } from "@/lib/db/repo";
 import { getGeniusPayPayment } from "@/lib/geniuspay";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 
 /**
  * GET /api/donate/status/[reference]

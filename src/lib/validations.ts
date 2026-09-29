@@ -4,54 +4,62 @@ export const contactSchema = yup.object({
   name: yup
     .string()
     .trim()
-    .min(2, "Le nom est trop court")
-    .max(150)
-    .required("Le nom est requis"),
+    .min(2, "Le nom doit contenir au moins 2 caractères.")
+    .max(150, "Le nom est trop long.")
+    .required("Le nom est obligatoire."),
   email: yup
     .string()
     .trim()
-    .email("Adresse e-mail invalide")
-    .required("L'e-mail est requis"),
-  phone: yup.string().trim().max(50).optional(),
-  subject: yup.string().trim().max(250).optional(),
+    .email("Adresse e-mail invalide.")
+    .max(200, "E-mail trop long.")
+    .required("L'e-mail est obligatoire."),
+  phone: yup
+    .string()
+    .trim()
+    .max(50, "Numéro trop long.")
+    .nullable()
+    .transform((v) => (v === "" ? null : v)),
+  subject: yup
+    .string()
+    .trim()
+    .min(2, "Sujet trop court.")
+    .max(250, "Sujet trop long.")
+    .required("L'objet est obligatoire."),
   message: yup
     .string()
     .trim()
-    .min(10, "Message trop court")
-    .max(5000)
-    .required("Le message est requis"),
+    .min(10, "Le message doit contenir au moins 10 caractères.")
+    .max(5000, "Message trop long.")
+    .required("Le message est obligatoire."),
+  consent: yup
+    .boolean()
+    .oneOf([true], "Vous devez accepter que vos données soient traitées.")
+    .required(),
+  // Honeypot — doit rester vide
+  website: yup.string().max(0, "Champ invalide.").optional(),
 });
 export type ContactFormValues = yup.InferType<typeof contactSchema>;
 
 export const donationSchema = yup.object({
-  donorName: yup.string().trim().min(2).max(150).required("Le nom est requis"),
-  donorEmail: yup
-    .string()
-    .trim()
-    .email("Adresse e-mail invalide")
-    .required("L'e-mail est requis"),
-  donorPhone: yup
-    .string()
-    .trim()
-    .matches(/^[+0-9 ]{6,20}$/, "Numéro de téléphone invalide")
-    .required("Le numéro de téléphone est requis"),
   amount: yup
     .number()
-    .typeError("Montant invalide")
-    .positive("Le montant doit être positif")
-    .min(5000, "Montant minimum : 5 000 GNF")
-    .required("Le montant est requis"),
+    .typeError("Montant invalide.")
+    .min(1000, "Le montant minimum est de 1 000 GNF.")
+    .max(100_000_000, "Montant trop élevé.")
+    .required("Le montant est obligatoire."),
   paymentMethod: yup
     .string()
-    .oneOf(
-      ["orange_money", "mtn_money", "moov_money", "wave", "card"],
-      "Moyen de paiement invalide",
-    )
-    .required("Le moyen de paiement est requis"),
+    .oneOf(["orange_money", "mtn_money", "moov_money", "wave", "card"], "Moyen de paiement invalide.")
+    .required(),
+  donorName: yup.string().trim().min(2, "Nom invalide.").max(150).required("Le nom est obligatoire."),
+  donorPhone: yup.string().trim().min(8, "Numéro invalide.").max(50).required("Le téléphone est obligatoire."),
+  donorEmail: yup.string().trim().email("E-mail invalide.").max(200).required("L'e-mail est obligatoire."),
   mmoProvider: yup.string().trim().max(50).optional(),
   customerCountry: yup.string().trim().length(2).optional(),
 });
 export type DonationFormValues = yup.InferType<typeof donationSchema>;
+
+export { formatGNF } from "./utils";
 
 export const loginSchema = yup.object({
   password: yup

@@ -1,96 +1,88 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import { useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState, useEffect, useRef, useCallback, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, HeartHandshake, Loader2, Smartphone, ShieldCheck, Sparkles, XCircle } from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
+import { toast } from "sonner";
+import { CheckCircle2, HeartHandshake, Loader2, ShieldCheck, XCircle, ArrowRight } from "lucide-react";
+import { ValidationError } from "yup";
 import { donationSchema, type DonationFormValues } from "@/lib/validations";
-import { formatGNF } from "@/lib/utils";
+import { formatGNF, cn } from "@/lib/utils";
 
-const SUGGESTED_AMOUNTS = [25000, 50000, 100000, 250000, 500000];
+const SUGGESTED_AMOUNTS = [25000, 50000, 100000, 250000, 500000] as const;
 
 const PAYMENT_METHODS = [
-  { value: "orange_money", label: "Orange Money", logo: "/orane-money.png" },
+  { value: "orange_money", label: "Orange Money", logo: "/orange-money.png" },
   { value: "mtn_money", label: "MTN MoMo", logo: "/mtn-money.png" },
-  { value: "moov_money", label: "Moov Money", logo: "/moove-money.png" },
+  { value: "moov_money", label: "Moov Money", logo: "/moov-money.png" },
   { value: "wave", label: "Wave", logo: "/wave-money.png" },
   { value: "card", label: "Carte bancaire", logo: "/bank.png" },
 ] as const;
 
 type PaymentMethod = (typeof PAYMENT_METHODS)[number]["value"];
+type Phase =
+  | { step: "idle" }
+  | { step: "awaiting_push"; reference: string; phone: string; method: PaymentMethod }
+  | { step: "confirmed" }
+  | { step: "declined"; message: string };
 
 type InitResponse =
   | { success: true; flow: "push"; reference: string; message?: string }
   | { success: true; flow: "redirect"; reference: string; redirectUrl: string; message?: string; warning?: string };
 
-type PaymentPhase =
-  | { step: "idle" }
-  | { step: "awaiting_push"; reference: string; phone: string }
-  | { step: "confirmed" }
-  | { step: "declined"; message: string };
-
 const POLL_INTERVAL_MS = 3000;
-const POLL_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes
+const POLL_TIMEOUT_MS = 3 * 60 * 1000;
 
-/**
- * Anime la valeur affichée d'un nombre vers sa nouvelle cible (façon compteur
- * "odomètre"), plutôt qu'un saut brut — donne au montant sélectionné une
- * sensation plus premium sans dépendance supplémentaire.
- */
+// ——— Count-up hook (pure RAF, no lib) ———
 function useCountUp(target: number, durationMs = 350) {
+  const reduce = useReducedMotion() ?? false;
   const [displayed, setDisplayed] = useState(target);
   const fromRef = useRef(target);
   const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (reduce) {
+      fromRef.current = target;
+      return;
+    }
     const from = fromRef.current;
     const start = performance.now();
-
     const step = (now: number) => {
       const progress = Math.min(1, (now - start) / durationMs);
       const eased = 1 - Math.pow(1 - progress, 3);
       setDisplayed(Math.round(from + (target - from) * eased));
-      if (progress < 1) {
-        rafRef.current = requestAnimationFrame(step);
-      } else {
-        fromRef.current = target;
-      }
+      if (progress < 1) rafRef.current = requestAnimationFrame(step);
+      else fromRef.current = target;
     };
-
     rafRef.current = requestAnimationFrame(step);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [target, durationMs]);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [target, durationMs, reduce]);
 
-  return displayed;
+  return reduce ? target : displayed;
 }
 
 export default function DonateForm() {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(100000);
   const [customAmount, setCustomAmount] = useState<number>(100000);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("orange_money");
-  const [phase, setPhase] = useState<PaymentPhase>({ step: "idle" });
-
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm<DonationFormValues>({
-    resolver: yupResolver(donationSchema),
-    defaultValues: { amount: 100000, paymentMethod: "orange_money" },
+  const [phase, setPhase] = useState<Phase>({ step: "idle" });
+  const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Partial<Record<keyof DonationFormValues, string>>>({});
+  const [values, setValues] = useState<DonationFormValues>({
+    amount: 100000,
+    paymentMethod: "orange_money",
+    donorName: "",
+    donorPhone: "",
+    donorEmail: "",
   });
 
   const animatedAmount = useCountUp(customAmount);
+  const reduce = useReducedMotion() ?? false;
 
   const pollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollDeadline = useRef<number>(0);
+  const searchParams = useSearchParams();
 
   const stopPolling = useCallback(() => {
     if (pollTimer.current) {
@@ -101,11 +93,7 @@ export default function DonateForm() {
 
   useEffect(() => stopPolling, [stopPolling]);
 
-  // Retour d'une redirection carte/Wave : /don?status=success|error&ref=MTX-xxx
-  // On ne fait jamais confiance au seul paramètre `status` de l'URL (il peut
-  // être manipulé ou refléter un état transitoire) — on revérifie toujours
-  // le vrai statut auprès de notre API avant d'afficher quoi que ce soit.
-  const searchParams = useSearchParams();
+  // ——— Redirect return: verify status server-side ———
   useEffect(() => {
     const ref = searchParams.get("ref");
     const urlStatus = searchParams.get("status");
@@ -114,49 +102,45 @@ export default function DonateForm() {
     (async () => {
       try {
         const res = await fetch(`/api/donate/status/${encodeURIComponent(ref)}`);
+        if (!res.ok) return;
         const data = await res.json();
-
         if (data.status === "success") {
           setPhase({ step: "confirmed" });
         } else if (data.status === "failed") {
           setPhase({
             step: "declined",
-            message: "Le paiement n'a pas pu être finalisé. Aucun montant n'a été prélevé si l'opération a échoué avant confirmation.",
+            message: "Le paiement n'a pas pu être finalisé. Aucun montant n'a été prélevé.",
           });
         } else {
-          // Toujours "pending" côté GeniusPay : le webhook peut arriver sous peu.
           setPhase({
             step: "declined",
-            message:
-              "Nous vérifions encore votre paiement. Si vous avez bien payé, la confirmation arrivera automatiquement par e-mail sous peu.",
+            message: "Nous vérifions encore votre paiement. La confirmation arrivera par e-mail sous peu.",
           });
         }
       } catch {
         setPhase({
           step: "declined",
-          message: "Impossible de vérifier le statut de votre paiement pour le moment. Contactez-nous si le prélèvement a eu lieu.",
+          message: "Impossible de vérifier le statut. Contactez-nous si le prélèvement a eu lieu.",
         });
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const startPolling = useCallback(
-    (reference: string, phone: string) => {
+    (reference: string, phone: string, method: PaymentMethod) => {
       pollDeadline.current = Date.now() + POLL_TIMEOUT_MS;
       pollTimer.current = setInterval(async () => {
         if (Date.now() > pollDeadline.current) {
           stopPolling();
           setPhase({
             step: "declined",
-            message:
-              "Pas de confirmation reçue à temps. Si vous avez validé sur votre téléphone, le don sera pris en compte dès réception.",
+            message: "Pas de confirmation reçue à temps. Si vous avez validé, le don sera pris en compte dès réception.",
           });
           return;
         }
-
         try {
           const res = await fetch(`/api/donate/status/${encodeURIComponent(reference)}`);
+          if (!res.ok) return;
           const data = await res.json();
 
           if (data.status === "success") {
@@ -168,163 +152,194 @@ export default function DonateForm() {
             setPhase({ step: "declined", message: "Le paiement a échoué ou a été annulé." });
             toast.error("Le paiement n'a pas abouti.");
           }
-          // sinon "pending" -> on continue le polling
         } catch {
-          // erreur réseau ponctuelle, on retente au tick suivant
+          /* retry next tick */
         }
       }, POLL_INTERVAL_MS);
-      setPhase({ step: "awaiting_push", reference, phone });
+      setPhase({ step: "awaiting_push", reference, phone, method });
     },
-    [stopPolling]
+    [stopPolling],
   );
 
-  const mutation = useMutation({
-    mutationFn: async (values: DonationFormValues) => {
+  const onSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    const payload: DonationFormValues = { ...values, amount: customAmount, paymentMethod };
+    try {
+      donationSchema.validateSync(payload, { abortEarly: false });
+    } catch (err) {
+      const newErrors: Partial<Record<keyof DonationFormValues, string>> = {};
+      if (err instanceof ValidationError) {
+        for (const ve of err.inner) {
+          if (ve.path) newErrors[ve.path as keyof DonationFormValues] = ve.message;
+        }
+      }
+      setErrors(newErrors);
+      return;
+    }
+    setErrors({});
+    setSubmitting(true);
+    try {
       const res = await fetch("/api/donate/init", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...values, paymentMethod }),
+        body: JSON.stringify(payload),
       });
+      const contentType = res.headers.get("content-type") || "";
+      const isJson = contentType.includes("application/json");
+      const data = isJson ? await res.json().catch(() => null) : null;
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || "Impossible d'initier le paiement.");
+        throw new Error(data?.error || `Erreur (${res.status}). Impossible d'initier le paiement.`);
       }
-      return res.json() as Promise<InitResponse>;
-    },
-    onSuccess: (data, values) => {
-      if (data.flow === "push") {
+      if (!data) {
+        throw new Error("Réponse inattendue du serveur de paiement.");
+      }
+
+      const init = data as InitResponse;
+      if (init.flow === "push") {
         toast.message("Demande envoyée. Validez sur votre téléphone.");
-        startPolling(data.reference, values.donorPhone);
-      } else if (data.flow === "redirect") {
-        if (data.warning) {
-          toast.warning(data.warning, { duration: 7000 });
-        } else {
-          toast.message(data.message || "Redirection vers le paiement sécurisé...");
-        }
-        window.location.href = data.redirectUrl;
+        startPolling(init.reference, payload.donorPhone, payload.paymentMethod);
+      } else if (init.flow === "redirect") {
+        if (init.warning) toast.warning(init.warning, { duration: 7000 });
+        else toast.message(init.message || "Redirection vers le paiement sécurisé…");
+        window.location.href = init.redirectUrl;
       }
-    },
-    onError: (err: Error) => {
-      toast.error(err.message);
-    },
-  });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erreur inconnue.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const pickAmount = (amount: number) => {
     setSelectedAmount(amount);
     setCustomAmount(amount);
-    setValue("amount", amount, { shouldValidate: true });
+    setValues((v) => ({ ...v, amount }));
+    if (errors.amount) setErrors((e) => ({ ...e, amount: undefined }));
   };
 
   const onCustomAmountChange = (raw: string) => {
     setSelectedAmount(null);
     const value = Number(raw);
-    if (Number.isFinite(value)) setCustomAmount(value);
+    if (Number.isFinite(value)) {
+      setCustomAmount(value);
+      setValues((v) => ({ ...v, amount: value }));
+    }
   };
 
   const pickPaymentMethod = (method: PaymentMethod) => {
     setPaymentMethod(method);
-    setValue("paymentMethod", method, { shouldValidate: true });
+    setValues((v) => ({ ...v, paymentMethod: method }));
+  };
+
+  const update = (field: keyof DonationFormValues) => (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    setValues((v) => ({ ...v, [field]: e.target.value }));
+    if (errors[field]) setErrors((er) => ({ ...er, [field]: undefined }));
   };
 
   const isMobileMoney = paymentMethod !== "card" && paymentMethod !== "wave";
 
-  // --- États post-soumission (push en attente / confirmé / refusé) ---
-
+  // ——— Phase: awaiting push ———
   if (phase.step === "awaiting_push") {
-    const activeMethod = PAYMENT_METHODS.find((m) => m.value === paymentMethod);
+    const activeMethod = PAYMENT_METHODS.find((m) => m.value === phase.method);
     return (
-      <div className="rounded-3xl border border-amber-200 bg-amber-50/80 p-8 text-center shadow-sm">
-        <motion.div
-          animate={{ scale: [1, 1.08, 1] }}
-          transition={{ duration: 1.4, repeat: Infinity }}
-          className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white ring-4 ring-amber-100"
-        >
-          {activeMethod ? (
+      <PhaseCard
+        tone="amber"
+        icon={
+          activeMethod ? (
             <Image src={activeMethod.logo} alt={activeMethod.label} width={40} height={20} className="h-6 w-auto object-contain" />
-          ) : (
-            <Smartphone size={28} className="text-amber-600" />
-          )}
-        </motion.div>
-        <p className="mt-5 font-display text-lg font-semibold text-navy-900">
-          Confirmez le paiement sur votre téléphone
-        </p>
-        <p className="mt-2 text-sm text-navy-500">
-          Une demande a été envoyée au <span className="font-medium">{phase.phone}</span>. Entrez votre
-          code PIN mobile money pour finaliser votre don — merci pour votre confiance.
+          ) : null
+        }
+        title="Confirmez le paiement sur votre téléphone"
+      >
+        <p className="text-sm text-navy-600">
+          Une demande a été envoyée au <span className="font-medium text-navy-900">{phase.phone}</span>.
+          Entrez votre code PIN Mobile Money pour finaliser votre don.
         </p>
         <button
           type="button"
-          onClick={() => {
-            stopPolling();
-            setPhase({ step: "idle" });
-          }}
-          className="mt-5 text-xs font-medium text-navy-400 underline underline-offset-2"
+          onClick={() => { stopPolling(); setPhase({ step: "idle" }); }}
+          className="mt-5 font-mono text-[0.6875rem] uppercase tracking-widest text-navy-400 hover:text-navy-700 underline underline-offset-2"
         >
           Annuler et revenir au formulaire
         </button>
-      </div>
+      </PhaseCard>
     );
   }
 
+  // ——— Phase: confirmed ———
   if (phase.step === "confirmed") {
     return (
-      <div className="rounded-3xl border border-primary-200 bg-primary-50/80 p-8 text-center shadow-sm">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary-100 text-primary-600">
-          <CheckCircle2 size={28} />
-        </div>
-        <p className="mt-5 font-display text-lg font-semibold text-navy-900">Merci pour votre don !</p>
-        <p className="mt-2 text-sm text-navy-500">Votre paiement a bien été confirmé.</p>
-      </div>
-    );
-  }
-
-  if (phase.step === "declined") {
-    return (
-      <div className="rounded-3xl border border-red-200 bg-red-50/80 p-8 text-center shadow-sm">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-red-600">
-          <XCircle size={28} />
-        </div>
-        <p className="mt-5 font-display text-lg font-semibold text-navy-900">Paiement non abouti</p>
-        <p className="mt-2 text-sm text-navy-500">{phase.message}</p>
+      <PhaseCard
+        tone="primary"
+        icon={<CheckCircle2 size={28} strokeWidth={1.75} />}
+        title="Merci pour votre don !"
+      >
+        <p className="text-sm text-navy-600">Votre paiement a bien été confirmé.</p>
         <button
           type="button"
           onClick={() => setPhase({ step: "idle" })}
-          className="mt-5 rounded-full bg-primary-600 px-5 py-2 text-sm font-semibold text-white hover:bg-primary-700"
+          className="btn-primary mt-5"
         >
-          Réessayer
+          Faire un autre don
         </button>
-      </div>
+      </PhaseCard>
     );
   }
 
-  // --- Formulaire ---
+  // ——— Phase: declined ———
+  if (phase.step === "declined") {
+    return (
+      <PhaseCard
+        tone="red"
+        icon={<XCircle size={28} strokeWidth={1.75} />}
+        title="Paiement non abouti"
+      >
+        <p className="text-sm text-navy-600">{phase.message}</p>
+        <button
+          type="button"
+          onClick={() => setPhase({ step: "idle" })}
+          className="btn-primary mt-5"
+        >
+          Réessayer
+        </button>
+      </PhaseCard>
+    );
+  }
 
+  // ——— Form ———
   return (
     <form
-      onSubmit={handleSubmit((values) => mutation.mutate(values))}
-      className="relative overflow-hidden rounded-3xl border border-navy-100 bg-white/80 p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_20px_45px_-25px_rgba(15,23,42,0.25)] backdrop-blur-sm sm:p-8"
+      onSubmit={onSubmit}
+      noValidate
+      className="relative overflow-hidden hairline-strong bg-white rounded-lg p-6 sm:p-8"
     >
-      <div className="mb-1 flex items-center gap-1.5 text-primary-600">
-        <Sparkles size={15} />
-        <span className="text-[11px] font-bold uppercase tracking-[0.16em]">Chaque don change une vie</span>
+      <span className="absolute inset-x-0 top-0 h-0.5 bg-gold-500" aria-hidden />
+
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <span className="h-px w-8 bg-gold-500/60" aria-hidden />
+        <span className="eyebrow">Chaque don change une vie</span>
       </div>
-      <div className="flex items-baseline justify-between">
-        <h2 className="font-display text-xl font-semibold text-navy-900">Choisissez un montant</h2>
+      <div className="mt-3 flex items-baseline justify-between gap-4">
+        <h2 className="font-display text-xl font-bold text-navy-900">Choisissez un montant</h2>
         <motion.span
           key={animatedAmount}
-          initial={{ opacity: 0.4, y: 2 }}
+          initial={reduce ? false : { opacity: 0.4, y: 2 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
-          className="font-display text-lg font-bold text-primary-600"
+          className="font-display text-lg font-bold text-primary-700 shrink-0"
         >
           {formatGNF(animatedAmount)}
         </motion.span>
       </div>
-      <p className="mt-1 text-sm text-navy-400">
+      <p className="mt-1 text-sm text-navy-500">
         Votre générosité offre éducation et protection aux enfants qui en ont besoin.
       </p>
 
-      <div className="relative mt-4 grid grid-cols-3 gap-2 sm:grid-cols-5">
+      {/* Amounts */}
+      <div className="relative mt-5 grid grid-cols-3 gap-2 sm:grid-cols-5">
         {SUGGESTED_AMOUNTS.map((amount) => {
           const isActive = selectedAmount === amount;
           return (
@@ -332,17 +347,16 @@ export default function DonateForm() {
               type="button"
               key={amount}
               onClick={() => pickAmount(amount)}
-              className={`relative overflow-hidden rounded-xl border px-2 py-2.5 text-xs font-semibold transition-colors sm:text-sm ${
-                isActive
-                  ? "border-primary-600 text-white"
-                  : "border-navy-200 text-navy-700 hover:border-primary-400"
-              }`}
+              className={cn(
+                "relative overflow-hidden rounded-md px-2 py-2.5 font-display text-xs font-semibold transition-colors sm:text-sm",
+                isActive ? "text-white" : "hairline text-navy-700 hover:hairline-strong",
+              )}
             >
               {isActive && (
                 <motion.span
                   layoutId="amount-highlight"
                   className="absolute inset-0 -z-10 bg-primary-600"
-                  transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                  transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 34 }}
                 />
               )}
               {formatGNF(amount)}
@@ -351,33 +365,24 @@ export default function DonateForm() {
         })}
       </div>
 
+      {/* Custom amount */}
       <div className="mt-4">
-        <label className="text-sm font-medium text-navy-700">Ou montant personnalisé (GNF)</label>
+        <FieldLabel label="Ou montant personnalisé" hint="GNF" />
         <input
           type="number"
-          {...register("amount")}
+          value={customAmount || ""}
           onChange={(e) => onCustomAmountChange(e.target.value)}
-          className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none transition-shadow focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+          className={inputCls(!!errors.amount)}
           placeholder="100000"
+          min={1000}
         />
-        <AnimatePresence>
-          {errors.amount && (
-            <motion.p
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-1 text-xs text-red-600"
-            >
-              {errors.amount.message}
-            </motion.p>
-          )}
-        </AnimatePresence>
+        {errors.amount && <ErrorText>{errors.amount}</ErrorText>}
       </div>
 
-      {/* Sélecteur de moyen de paiement */}
+      {/* Payment methods */}
       <div className="mt-6">
-        <label className="text-sm font-medium text-navy-700">Moyen de paiement</label>
-        <div className="relative mt-2 grid grid-cols-3 gap-2.5 sm:grid-cols-5">
+        <FieldLabel label="Moyen de paiement" />
+        <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5">
           {PAYMENT_METHODS.map(({ value, label, logo }) => {
             const isActive = paymentMethod === value;
             return (
@@ -385,114 +390,86 @@ export default function DonateForm() {
                 type="button"
                 key={value}
                 onClick={() => pickPaymentMethod(value)}
-                whileTap={{ scale: 0.96 }}
-                className={`relative flex flex-col items-center gap-1.5 overflow-hidden rounded-2xl border-2 p-2.5 transition-colors ${
-                  isActive
-                    ? "border-primary-600 bg-primary-50/60 shadow-sm shadow-primary-600/10"
-                    : "border-navy-100 bg-white hover:border-primary-300"
-                }`}
+                whileTap={reduce ? undefined : { scale: 0.96 }}
+                className={cn(
+                  "relative flex flex-col items-center gap-1.5 overflow-hidden rounded-md p-2.5 transition-colors",
+                  isActive ? "hairline-strong bg-primary-50/60" : "hairline bg-white hover:hairline-strong",
+                )}
               >
                 {isActive && (
                   <motion.span
                     layoutId="method-check"
                     className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary-600 text-white"
-                    transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                    transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 34 }}
                   >
-                    <CheckCircle2 size={12} strokeWidth={3} />
+                    <CheckCircle2 size={10} strokeWidth={3} />
                   </motion.span>
                 )}
-                <span className="flex h-9 w-full items-center justify-center rounded-lg bg-white ring-1 ring-inset ring-navy-100">
+                <span className="flex h-9 w-full items-center justify-center rounded-sm bg-white hairline">
                   <Image src={logo} alt={label} width={56} height={28} className="h-6 w-auto object-contain" />
                 </span>
-                <span className="text-[11px] font-medium leading-tight text-navy-600">{label}</span>
+                <span className="text-[0.6875rem] font-medium leading-tight text-navy-600">{label}</span>
               </motion.button>
             );
           })}
         </div>
         <p className="mt-2.5 flex items-center gap-1.5 text-xs text-navy-400">
-          <ShieldCheck size={13} className="shrink-0 text-primary-500" />
+          <ShieldCheck size={13} className="shrink-0 text-primary-500" strokeWidth={1.75} />
           {isMobileMoney
             ? "Vous recevrez une demande de confirmation directement sur votre téléphone."
             : "Vous serez redirigé vers une page de paiement sécurisée."}
         </p>
       </div>
 
+      {/* Donor info */}
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="text-sm font-medium text-navy-700">Nom complet</label>
+          <FieldLabel label="Nom complet" required />
           <input
-            {...register("donorName")}
-            className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none transition-shadow focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+            value={values.donorName}
+            onChange={update("donorName")}
+            className={inputCls(!!errors.donorName)}
             placeholder="Votre nom"
+            autoComplete="name"
           />
-          <AnimatePresence>
-            {errors.donorName && (
-              <motion.p
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mt-1 text-xs text-red-600"
-              >
-                {errors.donorName.message}
-              </motion.p>
-            )}
-          </AnimatePresence>
+          {errors.donorName && <ErrorText>{errors.donorName}</ErrorText>}
         </div>
         <div>
-          <label className="text-sm font-medium text-navy-700">
-            Téléphone {isMobileMoney ? "(Mobile Money)" : ""}
-          </label>
+          <FieldLabel label={`Téléphone ${isMobileMoney ? "(Mobile Money)" : ""}`} required />
           <input
-            {...register("donorPhone")}
-            className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none transition-shadow focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+            value={values.donorPhone}
+            onChange={update("donorPhone")}
+            className={inputCls(!!errors.donorPhone)}
             placeholder="+224 6XX XX XX XX"
+            autoComplete="tel"
           />
-          <AnimatePresence>
-            {errors.donorPhone && (
-              <motion.p
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mt-1 text-xs text-red-600"
-              >
-                {errors.donorPhone.message}
-              </motion.p>
-            )}
-          </AnimatePresence>
+          {errors.donorPhone && <ErrorText>{errors.donorPhone}</ErrorText>}
         </div>
       </div>
 
       <div className="mt-4">
-        <label className="text-sm font-medium text-navy-700">E-mail</label>
+        <FieldLabel label="E-mail" required />
         <input
           type="email"
-          {...register("donorEmail")}
-          className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none transition-shadow focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+          value={values.donorEmail}
+          onChange={update("donorEmail")}
+          className={inputCls(!!errors.donorEmail)}
           placeholder="vous@exemple.com"
+          autoComplete="email"
         />
-        <AnimatePresence>
-          {errors.donorEmail && (
-            <motion.p
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-1 text-xs text-red-600"
-            >
-              {errors.donorEmail.message}
-            </motion.p>
-          )}
-        </AnimatePresence>
+        {errors.donorEmail && <ErrorText>{errors.donorEmail}</ErrorText>}
       </div>
 
+      {/* Submit */}
       <motion.button
         type="submit"
-        disabled={mutation.isPending}
-        whileHover={{ scale: mutation.isPending ? 1 : 1.015 }}
-        whileTap={{ scale: mutation.isPending ? 1 : 0.985 }}
-        className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-primary-600 px-6 py-3.5 font-semibold text-white shadow-lg shadow-primary-600/20 transition-colors hover:bg-primary-700 disabled:opacity-60"
+        disabled={submitting}
+        whileHover={reduce || submitting ? undefined : { scale: 1.01 }}
+        whileTap={reduce || submitting ? undefined : { scale: 0.99 }}
+        className="btn-primary mt-6 w-full justify-center disabled:opacity-60 disabled:cursor-not-allowed"
       >
         <AnimatePresence mode="wait" initial={false}>
-          {mutation.isPending ? (
+          {submitting ? (
             <motion.span
               key="loading"
               initial={{ opacity: 0, rotate: -90 }}
@@ -500,7 +477,7 @@ export default function DonateForm() {
               exit={{ opacity: 0, rotate: 90 }}
               transition={{ duration: 0.18 }}
             >
-              <Loader2 className="animate-spin" size={18} />
+              <Loader2 size={18} className="animate-spin" />
             </motion.span>
           ) : (
             <motion.span
@@ -514,19 +491,90 @@ export default function DonateForm() {
             </motion.span>
           )}
         </AnimatePresence>
-        {mutation.isPending ? "Traitement..." : "Faire un don maintenant"}
+        {submitting ? "Traitement…" : "Faire un don maintenant"}
+        {!submitting && <ArrowRight size={16} className="transition-transform duration-200 group-hover:translate-x-1" />}
       </motion.button>
 
-      <div className="mt-4 flex items-center justify-center gap-4 border-t border-navy-100 pt-4 text-[11px] text-navy-400">
+      {/* Trust badges */}
+      <div className="mt-4 flex items-center justify-center gap-4 hairline-t pt-4 text-[0.6875rem] text-navy-400">
         <span className="flex items-center gap-1.5">
-          <ShieldCheck size={14} className="text-primary-500" />
+          <ShieldCheck size={13} className="text-primary-500" strokeWidth={1.75} />
           Paiement 100% sécurisé
         </span>
+        <span className="h-3 w-px bg-navy-200" aria-hidden />
         <span className="flex items-center gap-1.5">
-          <HeartHandshake size={14} className="text-primary-500" />
+          <HeartHandshake size={13} className="text-primary-500" strokeWidth={1.75} />
           Utilisé directement pour nos actions
         </span>
       </div>
     </form>
+  );
+}
+
+// ——— Sub-components ———
+
+function inputCls(hasError: boolean) {
+  return [
+    "w-full rounded-md px-3 py-2.5 text-sm text-navy-900 placeholder:text-navy-300",
+    "bg-background outline-none transition-all duration-150",
+    hasError
+      ? "hairline-strong border-red-400 focus:border-red-500"
+      : "hairline focus:border-primary-500 focus:hairline-strong",
+  ].join(" ");
+}
+
+function FieldLabel({ label, hint, required }: { label: string; hint?: string; required?: boolean }) {
+  return (
+    <div className="flex items-baseline justify-between gap-2">
+      <label className="eyebrow eyebrow-muted">
+        {label}
+        {required && <span className="text-primary-600 ml-1">*</span>}
+      </label>
+      {hint && (
+        <span className="font-mono text-[0.625rem] uppercase tracking-widest text-navy-400">{hint}</span>
+      )}
+    </div>
+  );
+}
+
+function ErrorText({ children }: { children: React.ReactNode }) {
+  return <p className="mt-1.5 font-mono text-[0.6875rem] text-red-600">{children}</p>;
+}
+
+function PhaseCard({
+  tone,
+  icon,
+  title,
+  children,
+}: {
+  tone: "primary" | "amber" | "red";
+  icon: React.ReactNode;
+  title: string;
+  children: React.ReactNode;
+}) {
+  const toneCls = {
+    primary: "border-primary-200 bg-primary-50/60",
+    amber: "border-gold-300 bg-gold-50/60",
+    red: "border-red-300 bg-red-50/60",
+  }[tone];
+  const iconBg = {
+    primary: "bg-primary-100 text-primary-700",
+    amber: "bg-white text-gold-700 ring-4 ring-gold-100",
+    red: "bg-red-100 text-red-700",
+  }[tone];
+
+  return (
+    <div className={cn("relative overflow-hidden rounded-lg hairline-strong p-8 text-center", toneCls)}>
+      <span className="absolute inset-x-0 top-0 h-0.5 bg-gold-500" aria-hidden />
+      <motion.div
+        animate={useReducedMotion() ? undefined : { scale: [1, 1.06, 1] }}
+        transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+        className={cn("mx-auto flex h-16 w-16 items-center justify-center rounded-full", iconBg)}
+      >
+        {icon}
+      </motion.div>
+      <p className="mt-5 font-display text-lg font-bold text-navy-900">{title}</p>
+      <div className="mt-2">{children}</div>
+    </div>
   );
 }

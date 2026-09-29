@@ -1,9 +1,21 @@
-import { newsRepo, testimonialsRepo, teamRepo, galleryRepo, programsRepo, eventsRepo, contactRepo } from "@/lib/db/repo";
+import {
+  newsRepo,
+  testimonialsRepo,
+  teamRepo,
+  galleryRepo,
+  programsRepo,
+  eventsRepo,
+  contactRepo,
+  newsletterRepo,
+  donationsRepo,
+} from "@/lib/db/repo";
 import DashboardCharts from "@/components/admin/DashboardCharts";
-import DashboardOverview from "@/components/admin/DashboardOverview";
+import DashboardOverview, {
+  type DashboardStat,
+} from "@/components/admin/DashboardOverview";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Tableau de bord" };
+export const metadata = { title: "Tableau de bord — Console FSCPE" };
 
 async function safeCount(promise: Promise<unknown[]>) {
   try {
@@ -14,16 +26,27 @@ async function safeCount(promise: Promise<unknown[]>) {
 }
 
 export default async function AdminDashboardPage() {
-  const [newsCount, testimonialsCount, teamCount, galleryCount, programsCount, eventsCount, messagesCount] =
-    await Promise.all([
-      safeCount(newsRepo.listAll()),
-      safeCount(testimonialsRepo.listAll()),
-      safeCount(teamRepo.listAll()),
-      safeCount(galleryRepo.listAll()),
-      safeCount(programsRepo.listAll()),
-      safeCount(eventsRepo.listAll()),
-      safeCount(contactRepo.listAll()),
-    ]);
+  const [
+    newsCount,
+    testimonialsCount,
+    teamCount,
+    galleryCount,
+    programsCount,
+    eventsCount,
+    messagesCount,
+    newsletterCount,
+    allDonations,
+  ] = await Promise.all([
+    safeCount(newsRepo.listAll()),
+    safeCount(testimonialsRepo.listAll()),
+    safeCount(teamRepo.listAll()),
+    safeCount(galleryRepo.listAll()),
+    safeCount(programsRepo.listAll()),
+    safeCount(eventsRepo.listAll()),
+    safeCount(contactRepo.listAll()),
+    safeCount(newsletterRepo.listAll()),
+    donationsRepo.listAll().catch(() => []),
+  ]);
 
   const resolvedCounts = {
     newsCount: Number.isFinite(newsCount) ? newsCount : 0,
@@ -33,38 +56,91 @@ export default async function AdminDashboardPage() {
     programsCount: Number.isFinite(programsCount) ? programsCount : 0,
     eventsCount: Number.isFinite(eventsCount) ? eventsCount : 0,
     messagesCount: Number.isFinite(messagesCount) ? messagesCount : 0,
+    newsletterCount: Number.isFinite(newsletterCount) ? newsletterCount : 0,
   };
 
-  const {
-    newsCount: safeNewsCount,
-    testimonialsCount: safeTestimonialsCount,
-    teamCount: safeTeamCount,
-    galleryCount: safeGalleryCount,
-    programsCount: safeProgramsCount,
-    eventsCount: safeEventsCount,
-    messagesCount: safeMessagesCount,
-  } = resolvedCounts;
+  const donationsTotalGNF = allDonations
+    .filter((d) => d.status === "success")
+    .reduce((sum, d) => sum + d.amount, 0);
 
-  const stats = [
-    { icon: "newspaper", label: "Actualités", value: newsCount, href: "/admin/news" },
-    { icon: "quote", label: "Témoignages", value: testimonialsCount, href: "/admin/testimonials" },
-    { icon: "users", label: "Membres de l'équipe", value: teamCount, href: "/admin/team" },
-    { icon: "image", label: "Photos en galerie", value: galleryCount, href: "/admin/gallery" },
-    { icon: "graduation", label: "Programmes", value: programsCount, href: "/admin/programs" },
-    { icon: "calendar", label: "Événements", value: eventsCount, href: "/admin/events" },
-    { icon: "mail", label: "Messages reçus", value: messagesCount, href: "/admin/messages" },
+  const stats: DashboardStat[] = [
+    {
+      icon: "newspaper",
+      label: "Actualités & Blog",
+      value: resolvedCounts.newsCount,
+      href: "/admin/news",
+      accent: "primary",
+      description: "Articles publiés ou brouillons",
+    },
+    {
+      icon: "calendar",
+      label: "Agenda & Événements",
+      value: resolvedCounts.eventsCount,
+      href: "/admin/events",
+      accent: "navy",
+      description: "Cérémonies et distributions",
+    },
+    {
+      icon: "graduation",
+      label: "Programmes ODD",
+      value: resolvedCounts.programsCount,
+      href: "/admin/programs",
+      accent: "gold",
+      description: "Piliers humanitaires actifs",
+    },
+    {
+      icon: "image",
+      label: "Photos en galerie",
+      value: resolvedCounts.galleryCount,
+      href: "/admin/gallery",
+      accent: "sky",
+      description: "Albums et reportages de terrain",
+    },
+    {
+      icon: "quote",
+      label: "Témoignages vérifiés",
+      value: resolvedCounts.testimonialsCount,
+      href: "/admin/testimonials",
+      accent: "primary",
+      description: "Retours des partenaires & parrains",
+    },
+    {
+      icon: "users",
+      label: "Équipe & Conseil",
+      value: resolvedCounts.teamCount,
+      href: "/admin/team",
+      accent: "navy",
+      description: "Direction et gouvernance FSCPE",
+    },
+    {
+      icon: "mail",
+      label: "Messages reçus",
+      value: resolvedCounts.messagesCount,
+      href: "/admin/messages",
+      accent: "rose",
+      description: "Demandes via le formulaire public",
+    },
+    {
+      icon: "send",
+      label: "Abonnés Newsletter",
+      value: resolvedCounts.newsletterCount,
+      href: "/admin/newsletter",
+      accent: "gold",
+      description: "Liste de diffusion engagée",
+    },
   ];
 
   const chartData = [
-    { label: "Actualités", value: newsCount, color: "#227a3f" },
-    { label: "Programmes", value: programsCount, color: "#d4a017" },
-    { label: "Événements", value: eventsCount, color: "#325086" },
-    { label: "Équipe", value: teamCount, color: "#4bb56d" },
-    { label: "Galerie", value: galleryCount, color: "#e3b32c" },
-    { label: "Avis", value: testimonialsCount, color: "#7690bd" },
+    { label: "Actualités", value: resolvedCounts.newsCount, color: "#1b7a42" },
+    { label: "Programmes", value: resolvedCounts.programsCount, color: "#d4a017" },
+    { label: "Événements", value: resolvedCounts.eventsCount, color: "#1e3a8a" },
+    { label: "Galerie", value: resolvedCounts.galleryCount, color: "#0284c7" },
+    { label: "Équipe", value: resolvedCounts.teamCount, color: "#059669" },
+    { label: "Témoignages", value: resolvedCounts.testimonialsCount, color: "#9333ea" },
   ];
 
   const contentTotal = stats.reduce((sum, stat) => sum + stat.value, 0);
+
   const quickActions = [
     { label: "Publier une actualité", href: "/admin/news", icon: "newspaper" },
     { label: "Ajouter un événement", href: "/admin/events", icon: "calendar" },
@@ -72,9 +148,15 @@ export default async function AdminDashboardPage() {
   ];
 
   return (
-    <>
-      <DashboardOverview stats={stats} quickActions={quickActions} contentTotal={contentTotal} />
+    <div className="space-y-8">
+      <DashboardOverview
+        stats={stats}
+        quickActions={quickActions}
+        contentTotal={contentTotal}
+        donationsTotalGNF={donationsTotalGNF}
+        donationsCount={allDonations.length}
+      />
       <DashboardCharts data={chartData} />
-    </>
+    </div>
   );
 }

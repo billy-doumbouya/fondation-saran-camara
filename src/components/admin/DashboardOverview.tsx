@@ -2,36 +2,36 @@
 
 import {
   Activity,
-  ArrowUpRight,
   CalendarDays,
   ExternalLink,
   GraduationCap,
-  Image as ImageIcon,
+  ImageIcon,
   Mail,
   Newspaper,
   Plus,
   Quote,
   Users2,
-  type LucideIcon,
+  HeartHandshake,
+  Send,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "motion/react";
-
-const iconMap: Record<string, LucideIcon> = {
-  newspaper: Newspaper,
-  quote: Quote,
-  users: Users2,
-  image: ImageIcon,
-  graduation: GraduationCap,
-  calendar: CalendarDays,
-  mail: Mail,
-};
+import AdminStatCard from "@/components/admin/ui/AdminStatCard";
+import AdminButton from "@/components/admin/ui/AdminButton";
 
 export type DashboardStat = {
   icon: string;
   label: string;
   value: number;
   href: string;
+  accent?: "primary" | "gold" | "navy" | "rose" | "sky";
+  description?: string;
+  trend?: {
+    value: string;
+    isPositive?: boolean;
+    label?: string;
+  };
 };
 
 export type DashboardQuickAction = {
@@ -44,152 +44,216 @@ interface DashboardOverviewProps {
   stats: DashboardStat[];
   quickActions: DashboardQuickAction[];
   contentTotal: number;
+  donationsTotalGNF?: number;
+  donationsCount?: number;
 }
 
-export default function DashboardOverview({ stats, quickActions, contentTotal }: DashboardOverviewProps) {
-  const stagger = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.07,
-        delayChildren: 0.08,
-      },
-    },
+export default function DashboardOverview({
+  stats,
+  quickActions,
+  contentTotal,
+  donationsTotalGNF = 0,
+  donationsCount = 0,
+}: DashboardOverviewProps) {
+  const formatGNF = (val: number) => {
+    return new Intl.NumberFormat("fr-FR").format(val) + " GNF";
   };
 
-  const item = {
-    hidden: { opacity: 0, y: 18 },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.45, ease: "easeOut" as const },
-    },
+  const getStatIcon = (iconName: string) => {
+    switch (iconName) {
+      case "newspaper":
+        return <Newspaper size={22} />;
+      case "calendar":
+        return <CalendarDays size={22} />;
+      case "graduation":
+        return <GraduationCap size={22} />;
+      case "image":
+        return <ImageIcon size={22} />;
+      case "mail":
+        return <Mail size={22} />;
+      case "send":
+        return <Send size={22} />;
+      case "quote":
+        return <Quote size={22} />;
+      case "users":
+        return <Users2 size={22} />;
+      case "heart":
+        return <HeartHandshake size={22} />;
+      default:
+        return <Activity size={22} />;
+    }
   };
 
   return (
-    <div className="mx-auto max-w-7xl">
+    <div className="space-y-7">
+      {/* Bannière Maîtresse Executive */}
       <motion.section
-        initial={{ opacity: 0, y: 18 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="relative overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_top_right,_rgba(76,181,100,0.24),_transparent_35%),linear-gradient(135deg,#101a2e_0%,#16233f_42%,#1a2e54_100%)] px-6 py-7 text-white shadow-[0_30px_80px_rgba(16,26,46,0.18)] sm:px-8 sm:py-8"
+        transition={{ duration: 0.45, ease: "easeOut" }}
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy-950 via-[#13203c] to-primary-950 p-6 text-white shadow-xl shadow-navy-950/10 sm:p-8 md:p-10 border border-white/10"
       >
-        <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full border-[28px] border-primary-400/20" />
-        <div className="absolute -bottom-8 right-20 h-20 w-20 rounded-full bg-gold-400/15 blur-2xl" />
-        <div className="absolute left-0 top-0 h-full w-full bg-[linear-gradient(120deg,transparent_0%,rgba(255,255,255,0.04)_50%,transparent_100%)]" />
+        {/* Cercles géométriques & Lueur ornementale */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full border-[32px] border-primary-500/15"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-16 right-36 h-40 w-40 rounded-full bg-gold-400/15 blur-3xl"
+        />
 
-        <motion.div
-          initial={{ opacity: 0, x: -16 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.45, delay: 0.08, ease: "easeOut" }}
-          className="relative"
-        >
-          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary-200">Espace administration</p>
-          <h1 className="font-display mt-3 text-2xl font-semibold sm:text-3xl">Tableau de bord</h1>
-          <p className="mt-3 max-w-xl text-sm text-navy-200">
-            Une vue claire de l&apos;activité éditoriale et des ressources de la fondation.
-          </p>
-          <div className="mt-6 flex flex-wrap items-center gap-3 text-xs font-medium text-navy-200">
-            <span className="flex items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3 py-1.5 backdrop-blur-sm">
-              <Activity size={14} className="text-primary-300" />
-              Données synchronisées
-            </span>
-            <span className="text-navy-300">Dernière vue globale de vos contenus</span>
+        <div className="relative flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 rounded-full border border-gold-400/30 bg-gold-400/10 px-3.5 py-1 text-xs font-semibold text-gold-300 backdrop-blur-md">
+              <Sparkles size={14} className="text-gold-400" />
+              <span className="font-mono uppercase tracking-widest text-[0.6875rem]">
+                Console de Pilotage Général · Conakry
+              </span>
+            </div>
+
+            <h1 className="font-display mt-4 text-2xl font-extrabold tracking-tight sm:text-3xl md:text-4xl">
+              Bienvenue sur l&apos;espace de gestion{" "}
+              <span className="bg-gradient-to-r from-gold-300 via-gold-200 to-primary-300 bg-clip-text text-transparent">
+                FSCPE
+              </span>
+            </h1>
+
+            <p className="mt-2.5 text-sm text-slate-300 leading-relaxed max-w-xl">
+              Supervisez les dons enregistrés, coordonnez la publication des
+              articles et gérez les programmes d&apos;aide aux orphelins de Guinée.
+            </p>
+
+            <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-slate-300">
+              <span className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 backdrop-blur-xs font-mono">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                {contentTotal} ressources actives
+              </span>
+              <span className="text-slate-400">•</span>
+              <span className="font-mono text-gold-300 font-semibold">
+                {donationsCount} contribution{donationsCount > 1 ? "s" : ""}
+              </span>
+            </div>
           </div>
-        </motion.div>
+
+          {/* Raccourcis d'action rapide dans le Hero */}
+          <div className="flex flex-wrap items-center gap-3">
+            <Link href="/admin/news">
+              <AdminButton
+                variant="gold"
+                size="sm"
+                leftIcon={<Plus size={16} />}
+              >
+                Nouvel article
+              </AdminButton>
+            </Link>
+
+            <Link href="/admin/donations">
+              <AdminButton
+                variant="outline"
+                size="sm"
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white"
+                leftIcon={<HeartHandshake size={16} />}
+              >
+                Voir les dons
+              </AdminButton>
+            </Link>
+
+            <a
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3.5 py-2 text-xs font-semibold text-white hover:bg-white/20 transition-colors border border-white/15"
+            >
+              <span>Site public</span>
+              <ExternalLink size={13} className="text-slate-300" />
+            </a>
+          </div>
+        </div>
       </motion.section>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-[1.15fr_2fr]">
-        <motion.section
-          variants={item}
-          initial="hidden"
-          animate="show"
-          whileHover={{ y: -4 }}
-          className="rounded-2xl border border-primary-100 bg-primary-50/70 p-5 shadow-[0_12px_30px_rgba(34,122,63,0.06)] sm:p-6"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary-700">Portefeuille éditorial</p>
-              <p className="font-display mt-3 text-4xl font-bold text-navy-900">{contentTotal}</p>
-              <p className="mt-1 text-sm text-navy-600">ressources actuellement suivies</p>
-            </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-primary-600 shadow-sm ring-1 ring-primary-100">
-              <Activity size={20} />
-            </div>
-          </div>
-          <div className="mt-5 h-2 overflow-hidden rounded-full bg-white ring-1 ring-primary-100">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: "72%" }}
-              transition={{ duration: 0.8, ease: "easeOut", delay: 0.15 }}
-              className="h-full rounded-full bg-primary-600"
-            />
-          </div>
-          <p className="mt-2 text-xs text-navy-500">Une base active pour raconter l&apos;impact de la fondation.</p>
-        </motion.section>
+      {/* Cartes KPI Principales (Dons & Modules Clés) */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-base font-bold uppercase tracking-wider text-navy-950 sm:text-lg">
+            Indicateurs Stratégiques
+          </h2>
+          <span className="text-xs text-slate-400 font-mono">
+            Mise à jour temps réel
+          </span>
+        </div>
 
-        <motion.section
-          variants={item}
-          initial="hidden"
-          animate="show"
-          whileHover={{ y: -4 }}
-          className="rounded-2xl border border-navy-100 bg-white p-5 shadow-[0_12px_30px_rgba(16,26,46,0.04)] sm:p-6"
-        >
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-primary-600">Actions rapides</p>
-              <h2 className="font-display mt-1 text-lg font-semibold text-navy-900">Faire avancer le contenu</h2>
-            </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gold-50 text-gold-600">
-              <Plus size={18} />
-            </div>
-          </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <AdminStatCard
+            label="Dons collectés"
+            value={donationsTotalGNF > 0 ? formatGNF(donationsTotalGNF) : "0 GNF"}
+            icon={<HeartHandshake size={22} />}
+            accent="gold"
+            href="/admin/donations"
+            actionLabel="Transactions"
+            description="Collecte via GeniusPay & Mobile Money"
+          />
 
-          <motion.div variants={stagger} initial="hidden" animate="show" className="mt-5 grid gap-2 sm:grid-cols-3">
-            {quickActions.map((action) => {
-              const Icon = iconMap[action.icon] ?? Newspaper;
+          <AdminStatCard
+            label="Actualités & Blog"
+            value={stats.find((s) => s.href === "/admin/news")?.value ?? 0}
+            icon={<Newspaper size={22} />}
+            accent="primary"
+            href="/admin/news"
+            actionLabel="Éditer"
+            description="Publications et reportages terrain"
+          />
 
-              return (
-                <motion.div key={action.href} variants={item} whileHover={{ y: -3 }}>
-                  <Link
-                    href={action.href}
-                    className="group flex items-center gap-3 rounded-xl border border-navy-100 bg-white px-3 py-3 text-sm font-semibold text-navy-700 transition-colors hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
-                  >
-                    <Icon size={17} className="shrink-0 text-primary-600" />
-                    <span className="min-w-0 flex-1">{action.label}</span>
-                    <ExternalLink size={14} className="shrink-0 text-navy-300 transition-colors group-hover:text-primary-600" />
-                  </Link>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        </motion.section>
-      </div>
+          <AdminStatCard
+            label="Agenda & Événements"
+            value={stats.find((s) => s.href === "/admin/events")?.value ?? 0}
+            icon={<CalendarDays size={22} />}
+            accent="navy"
+            href="/admin/events"
+            actionLabel="Planifier"
+            description="Cérémonies et distributions prévues"
+          />
 
-      <motion.div variants={stagger} initial="hidden" animate="show" className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => {
-          const Icon = iconMap[stat.icon] ?? Newspaper;
+          <AdminStatCard
+            label="Messages reçus"
+            value={stats.find((s) => s.href === "/admin/messages")?.value ?? 0}
+            icon={<Mail size={22} />}
+            accent="rose"
+            href="/admin/messages"
+            actionLabel="Consulter"
+            description="Sollicitations depuis le formulaire public"
+          />
+        </div>
+      </section>
 
-          return (
-            <motion.div key={stat.label} variants={item} whileHover={{ y: -5 }}>
-              <Link
+      {/* Grille secondaire des modules de contenu */}
+      <section className="space-y-3">
+        <h2 className="font-display text-base font-bold uppercase tracking-wider text-navy-950 sm:text-lg">
+          Modules & Gouvernance
+        </h2>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {stats
+            .filter(
+              (s) =>
+                s.href !== "/admin/news" &&
+                s.href !== "/admin/events" &&
+                s.href !== "/admin/messages"
+            )
+            .map((stat) => (
+              <AdminStatCard
+                key={stat.label}
+                label={stat.label}
+                value={stat.value}
+                icon={getStatIcon(stat.icon)}
+                accent={stat.accent || "navy"}
                 href={stat.href}
-                className="group block rounded-2xl border border-navy-100 bg-white p-5 shadow-[0_10px_25px_rgba(16,26,46,0.03)] transition-all hover:border-primary-200 hover:shadow-[0_20px_40px_rgba(34,122,63,0.08)]"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600 transition-colors group-hover:bg-primary-600 group-hover:text-white">
-                  <Icon size={18} />
-                </div>
-                <div className="mt-3 flex items-end justify-between gap-2">
-                  <p className="font-display text-2xl font-bold text-navy-900">{stat.value}</p>
-                  <ArrowUpRight size={16} className="mb-1 text-primary-500 opacity-0 transition-opacity group-hover:opacity-100" />
-                </div>
-                <p className="mt-1 text-sm text-navy-500">{stat.label}</p>
-              </Link>
-            </motion.div>
-          );
-        })}
-      </motion.div>
+                actionLabel="Gérer"
+                description={stat.description}
+              />
+            ))}
+        </div>
+      </section>
     </div>
   );
 }
