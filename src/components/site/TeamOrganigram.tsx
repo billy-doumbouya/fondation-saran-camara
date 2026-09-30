@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
@@ -21,6 +21,7 @@ import {
   ArrowRight,
   Info,
   CheckCircle2,
+  RotateCcw,
 } from "lucide-react";
 import type { TeamMember } from "@/lib/db/schema";
 
@@ -33,6 +34,30 @@ export default function TeamOrganigram({ members }: TeamOrganigramProps) {
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [activeFilter, setActiveFilter] = useState<"all" | "fondatrice" | "bureau" | "ca">("all");
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+
+  // Référence pour le conteneur scrollable sur mobile
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Centrer automatiquement sur le sommet de l'organigramme (la Fondatrice) sur mobile
+  useEffect(() => {
+    if (viewMode === "chart" && containerRef.current) {
+      const el = containerRef.current;
+      if (el.scrollWidth > el.clientWidth) {
+        el.scrollLeft = (el.scrollWidth - el.clientWidth) / 2;
+      }
+    }
+  }, [viewMode]);
+
+  // Fonction pour recentrer manuellement l'organigramme
+  const centerOrganigram = () => {
+    if (containerRef.current) {
+      const el = containerRef.current;
+      el.scrollTo({
+        left: (el.scrollWidth - el.clientWidth) / 2,
+        behavior: "smooth",
+      });
+    }
+  };
 
   // Regroupement sémantique des membres
   const fondatrice = useMemo(
@@ -193,10 +218,30 @@ export default function TeamOrganigram({ members }: TeamOrganigramProps) {
           ========================================================================= */}
       {viewMode === "chart" && (
         <div className="relative">
-          {/* ===============================================================
-              ORGANIGRAMME DESKTOP (Écrans larges >= 1024px)
-              =============================================================== */}
-          <div className="hidden lg:block relative py-6">
+          {/* Guide tactile mobile avec bouton de recentrage */}
+          <div className="lg:hidden flex items-center justify-between gap-3 rounded-xl bg-gold-50/90 border border-gold-300/80 p-3 mb-6 shadow-xs">
+            <div className="flex items-center gap-2.5 text-xs text-gold-950 font-medium">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gold-500 text-white font-bold animate-pulse text-[12px] shrink-0">
+                ↔
+              </span>
+              <span>Glissez latéralement pour explorer tout l&apos;organigramme</span>
+            </div>
+            <button
+              type="button"
+              onClick={centerOrganigram}
+              className="flex items-center gap-1.5 rounded-lg bg-white border border-gold-300 px-3 py-1.5 text-xs font-bold text-navy-900 shadow-2xs hover:bg-gold-50 transition-colors shrink-0"
+            >
+              <RotateCcw size={12} className="text-gold-600" />
+              <span>Recentrer</span>
+            </button>
+          </div>
+
+          {/* Conteneur défilable tactile pour mobile, plein format centré sur grand écran */}
+          <div
+            ref={containerRef}
+            className="relative overflow-x-auto pb-8 touch-pan-x scrollbar-thin cursor-grab active:cursor-grabbing rounded-2xl"
+          >
+            <div className="min-w-[960px] lg:min-w-0 w-full relative py-6">
             {/* Sommet : La Fondatrice & Présidence */}
             {fondatrice && (
               <div className="flex flex-col items-center">
@@ -640,143 +685,9 @@ export default function TeamOrganigram({ members }: TeamOrganigramProps) {
               </div>
             </div>
           </div>
-
-          {/* ===============================================================
-              ORGANIGRAMME MOBILE & TABLETTE (< 1024px)
-              Timeline & Arbre vertical fluide sans débordement
-              =============================================================== */}
-          <div className="block lg:hidden relative pl-6 space-y-10">
-            {/* Ligne directrice verticale continue */}
-            <div className="absolute left-2.5 top-3 bottom-3 w-0.5 bg-gradient-to-b from-gold-500 via-primary-500 to-navy-600 opacity-40" />
-
-            {/* Niveau 0 : Présidence Fondatrice */}
-            {fondatrice && (
-              <div className="relative">
-                <span className="absolute -left-[1.375rem] top-4 h-4 w-4 rounded-full border-2 border-white bg-gold-500 shadow-md" />
-                <div className="mb-2">
-                  <span className="font-mono text-[0.625rem] font-bold uppercase tracking-wider text-gold-600 bg-gold-50 px-2.5 py-0.5 rounded-full border border-gold-200">
-                    Niveau 0 — Présidence Fondatrice
-                  </span>
-                </div>
-
-                <div
-                  onClick={() => setSelectedMember(fondatrice)}
-                  className="rounded-xl border border-gold-300 bg-gradient-to-b from-white to-gold-50/30 p-4 shadow-sm"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-gold-400">
-                      {fondatrice.photoUrl ? (
-                        <Image
-                          src={fondatrice.photoUrl}
-                          alt={fondatrice.fullName}
-                          fill
-                          sizes="64px"
-                          className="object-cover"
-                        />
-                      ) : (
-                        <UserRound size={24} />
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="font-display text-base font-bold text-navy-950">
-                        {fondatrice.fullName}
-                      </h3>
-                      <p className="font-mono text-xs font-semibold uppercase text-gold-600">
-                        {fondatrice.role}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="mt-3 text-xs text-navy-600 line-clamp-2 leading-relaxed">
-                    {fondatrice.bio}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Niveau 1 : Bureau Exécutif */}
-            <div className="relative">
-              <span className="absolute -left-[1.375rem] top-4 h-4 w-4 rounded-full border-2 border-white bg-primary-500 shadow-md" />
-              <div className="mb-3">
-                <span className="font-mono text-[0.625rem] font-bold uppercase tracking-wider text-primary-700 bg-primary-50 px-2.5 py-0.5 rounded-full border border-primary-200">
-                  Niveau 1 — Bureau Exécutif ({bureauMembers.length} membres)
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                {bureauMembers.map((member) => (
-                  <div
-                    key={member.id}
-                    onClick={() => setSelectedMember(member)}
-                    className="flex items-center gap-3 rounded-lg border border-primary-100 bg-white p-3 shadow-xs"
-                  >
-                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-primary-100 bg-primary-50">
-                      {member.photoUrl ? (
-                        <Image
-                          src={member.photoUrl}
-                          alt={member.fullName}
-                          fill
-                          sizes="48px"
-                          className="object-cover"
-                        />
-                      ) : (
-                        <UserRound size={20} className="text-primary-300" />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h4 className="font-display text-sm font-bold text-navy-950 truncate">
-                        {member.fullName}
-                      </h4>
-                      <p className="text-xs text-primary-600 truncate">{member.role}</p>
-                    </div>
-                    <ChevronRight size={15} className="text-navy-300 shrink-0" />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Niveau 2 : Conseil d'Administration */}
-            <div className="relative">
-              <span className="absolute -left-[1.375rem] top-4 h-4 w-4 rounded-full border-2 border-white bg-navy-600 shadow-md" />
-              <div className="mb-3">
-                <span className="font-mono text-[0.625rem] font-bold uppercase tracking-wider text-navy-700 bg-navy-50 px-2.5 py-0.5 rounded-full border border-navy-200">
-                  Niveau 2 — Conseil d&apos;Administration ({caMembers.length} membres)
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                {caMembers.map((member) => (
-                  <div
-                    key={member.id}
-                    onClick={() => setSelectedMember(member)}
-                    className="flex items-center gap-3 rounded-lg border border-navy-100 bg-white p-3 shadow-xs"
-                  >
-                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-navy-100 bg-navy-50">
-                      {member.photoUrl ? (
-                        <Image
-                          src={member.photoUrl}
-                          alt={member.fullName}
-                          fill
-                          sizes="48px"
-                          className="object-cover"
-                        />
-                      ) : (
-                        <UserRound size={20} className="text-navy-300" />
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <h4 className="font-display text-sm font-bold text-navy-950 truncate">
-                        {member.fullName}
-                      </h4>
-                      <p className="text-xs text-navy-600 truncate">{member.role}</p>
-                    </div>
-                    <ChevronRight size={15} className="text-navy-300 shrink-0" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
-      )}
+      </div>
+    )}
 
       {/* =========================================================================
           VUE 2 : ANNUAIRE & FICHES DÉTAILLÉES (Mode Grille)
