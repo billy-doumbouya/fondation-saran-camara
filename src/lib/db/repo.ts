@@ -122,8 +122,17 @@ export const teamRepo = {
 export const galleryRepo = {
   listAll: (): Promise<GalleryImage[]> =>
     db.select().from(galleryImages).orderBy(desc(galleryImages.createdAt)),
+  getById: (id: number) =>
+    db
+      .select()
+      .from(galleryImages)
+      .where(eq(galleryImages.id, id))
+      .limit(1)
+      .then((r) => r[0]),
   create: (data: NewGalleryImage) =>
     db.insert(galleryImages).values(data).returning(),
+  update: (id: number, data: Partial<NewGalleryImage>) =>
+    db.update(galleryImages).set(data).where(eq(galleryImages.id, id)).returning(),
   remove: (id: number) =>
     db.delete(galleryImages).where(eq(galleryImages.id, id)),
 };

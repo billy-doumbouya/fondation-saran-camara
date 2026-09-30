@@ -49,7 +49,7 @@ export default function Modal({
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-0 sm:p-4 md:p-6 overflow-y-auto overscroll-contain">
           {/* Arrière-plan flouté moderne */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -57,7 +57,7 @@ export default function Modal({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-navy-950/65 backdrop-blur-sm"
+            className="fixed inset-0 bg-navy-950/70 backdrop-blur-sm"
           />
 
           {/* Conteneur de la boîte modale */}
@@ -66,17 +66,17 @@ export default function Modal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 14 }}
             transition={{ type: "spring", damping: 25, stiffness: 320 }}
-            className={`relative w-full ${SIZE_CLASSES[size]} my-auto max-h-[92vh] flex flex-col rounded-3xl border border-navy-100/80 bg-white shadow-[0_25px_70px_rgba(15,23,42,0.28)] overflow-hidden z-10`}
+            className={`relative w-full ${SIZE_CLASSES[size]} my-auto max-sm:min-h-[100dvh] max-sm:h-full max-sm:rounded-none max-h-[92dvh] sm:rounded-3xl flex flex-col border border-navy-100/80 bg-white shadow-[0_25px_70px_rgba(15,23,42,0.28)] overflow-hidden z-10`}
           >
             {/* Header avec dégradé subtil et titre stylisé */}
-            <div className="flex items-start justify-between border-b border-navy-100 bg-gradient-to-r from-navy-50/60 via-white to-primary-50/30 px-6 py-5 sm:px-8">
+            <div className="shrink-0 flex items-start justify-between border-b border-navy-100 bg-gradient-to-r from-navy-50/70 via-white to-primary-50/40 px-5 py-4 sm:px-8 sm:py-5">
               <div>
                 {badge && (
                   <span className="inline-block mb-1.5 rounded-full bg-primary-100/80 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-primary-800">
                     {badge}
                   </span>
                 )}
-                <h2 className="font-display text-xl font-bold tracking-tight text-navy-900">
+                <h2 className="font-display text-lg sm:text-xl font-bold tracking-tight text-navy-900">
                   {title}
                 </h2>
                 {description && (
@@ -88,15 +88,15 @@ export default function Modal({
               <button
                 type="button"
                 onClick={onClose}
-                className="ml-4 -mr-1.5 -mt-1 inline-flex h-9 w-9 items-center justify-center rounded-full text-navy-400 hover:bg-navy-100/70 hover:text-navy-700 transition-colors"
+                className="ml-4 -mr-1.5 -mt-1 inline-flex h-10 w-10 items-center justify-center rounded-full text-navy-400 hover:bg-navy-100/70 hover:text-navy-700 transition-colors"
                 aria-label="Fermer la boîte de dialogue"
               >
-                <X size={18} />
+                <X size={20} />
               </button>
             </div>
 
-            {/* Contenu avec défilement fluide */}
-            <div className="flex-1 overflow-y-auto px-6 py-6 sm:px-8 max-h-[calc(92vh-100px)]">
+            {/* Contenu avec défilement fluide et tactile */}
+            <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-8 sm:py-6 max-h-[calc(92dvh-85px)] max-sm:max-h-none [-webkit-overflow-scrolling:touch]">
               {children}
             </div>
           </motion.div>

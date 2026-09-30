@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import Image from "next/image";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Plus, Trash2, Loader2, ExternalLink, Tag } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, ExternalLink } from "lucide-react";
 import Modal from "@/components/admin/Modal";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import ImageUploader from "@/components/admin/ImageUploader";
@@ -23,22 +23,43 @@ export default function AdminGalleryPage() {
   const queryClient = useQueryClient();
   const { data: items = [], isLoading } = useQuery({ queryKey: ["admin-gallery"], queryFn: fetchGallery });
   const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState<GalleryImage | null>(null);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<GalleryCategory | "">("");
   const [pending, setPending] = useState<{ url: string; publicId?: string } | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
+  const openCreate = () => {
+    setEditing(null);
+    setTitle("");
+    setCategory("");
+    setPending(null);
+    setModalOpen(true);
+  };
+
+  const openEdit = (item: GalleryImage) => {
+    setEditing(item);
+    setTitle(item.title ?? "");
+    setCategory((item.category as GalleryCategory) ?? "");
+    setPending({
+      url: item.imageUrl,
+      publicId: item.imagePublicId ?? undefined,
+    });
+    setModalOpen(true);
+  };
+
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (!pending?.url) throw new Error("Veuillez téléverser une image.");
-      const res = await fetch("/api/gallery", {
-        method: "POST",
+      if (!pending?.url) throw new Error("Veuillez sélectionner une image.");
+      const url = editing ? `/api/gallery/${editing.id}` : "/api/gallery";
+      const res = await fetch(url, {
+        method: editing ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: title.trim() || null,
           category: category || null,
           imageUrl: pending.url,
-          imagePublicId: pending.publicId || "fscpe_gallery_" + Date.now(),
+          imagePublicId: pending.publicId || (editing?.imagePublicId ?? "fscpe_gallery_" + Date.now()),
         }),
       });
       if (!res.ok) throw new Error("Échec de l'enregistrement.");
@@ -46,9 +67,10 @@ export default function AdminGalleryPage() {
     },
     onSuccess: () => {
       playConfirmSound();
-      toast.success("Photo ajoutée à la galerie.");
+      toast.success(editing ? "Photo mise à jour avec succès." : "Photo ajoutée à la galerie.");
       queryClient.invalidateQueries({ queryKey: ["admin-gallery"] });
       setModalOpen(false);
+      setEditing(null);
       setTitle("");
       setCategory("");
       setPending(null);
@@ -85,13 +107,8 @@ export default function AdminGalleryPage() {
           </div>
           <button
             type="button"
-            onClick={() => {
-              setTitle("");
-              setCategory("");
-              setPending(null);
-              setModalOpen(true);
-            }}
-            className="flex items-center justify-center gap-2 rounded-full bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_12px_25px_rgba(34,122,63,0.22)] transition-all hover:-translate-y-0.5 hover:bg-primary-700"
+            onClick={openCreate}
+            className="flex items-center justify-center gap-2 rounded-full bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_12px_25px_rgba(34,122,63,0.22)] transition-all hover:-translate-y-0.5 hover:bg-primary-700 min-h-[44px]"
           >
             <Plus size={16} /> Ajouter une photo
           </button>
@@ -107,21 +124,21 @@ export default function AdminGalleryPage() {
           <p className="text-sm font-medium">Aucune photo dans la galerie pour le moment.</p>
           <button
             type="button"
-            onClick={() => setModalOpen(true)}
+            onClick={openCreate}
             className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:underline"
           >
             <Plus size={14} /> Téléverser une première photo
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {items.map((img) => (
             <motion.div
               key={img.id}
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
-              className="group relative h-48 overflow-hidden rounded-[22px] border border-navy-100 bg-white shadow-[0_12px_30px_rgba(16,26,46,0.04)]"
+              className="group relative h-56 overflow-hidden rounded-[22px] border border-navy-100 bg-white shadow-[0_12px_30px_rgba(16,26,46,0.04)]"
             >
               <Image
                 src={img.imageUrl}
@@ -130,15 +147,24 @@ export default function AdminGalleryPage() {
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 unoptimized
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/20" />
 
-              {/* Bouton de suppression et lien plein écran */}
-              <div className="absolute right-2 top-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              {/* Boutons d'action (Modifier, Supprimer, Plein écran) - Toujours visibles sur mobile */}
+              <div className="absolute right-2 top-2 flex items-center gap-1.5 z-10">
+                <button
+                  type="button"
+                  onClick={() => openEdit(img)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-navy-900 shadow hover:bg-white transition-colors"
+                  title="Modifier"
+                  aria-label="Modifier la photo"
+                >
+                  <Pencil size={13} />
+                </button>
                 <a
                   href={img.imageUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded-full bg-black/60 p-2 text-white hover:bg-black/80 transition-colors"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
                   title="Voir en grand"
                 >
                   <ExternalLink size={13} />
@@ -146,7 +172,7 @@ export default function AdminGalleryPage() {
                 <button
                   type="button"
                   onClick={() => setDeleteId(img.id)}
-                  className="rounded-full bg-red-600/90 p-2 text-white hover:bg-red-700 transition-colors"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-red-600/90 text-white hover:bg-red-700 transition-colors"
                   aria-label="Supprimer"
                   title="Supprimer la photo"
                 >
@@ -154,18 +180,16 @@ export default function AdminGalleryPage() {
                 </button>
               </div>
 
-              {/* Légende et catégorie au survol */}
-              <div className="absolute inset-x-3 bottom-3 opacity-0 group-hover:opacity-100 transition-opacity">
+              {/* Légende et catégorie */}
+              <div className="absolute inset-x-3 bottom-3 z-10">
                 {img.category && (
-                  <span className="inline-block mb-1 rounded-md bg-white/20 px-1.5 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
+                  <span className="inline-block mb-1 rounded-md bg-white/25 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
                     {GALLERY_CATEGORY_LABELS[img.category as GalleryCategory] ?? img.category}
                   </span>
                 )}
-                {img.title && (
-                  <p className="text-xs font-semibold text-white line-clamp-1 drop-shadow">
-                    {img.title}
-                  </p>
-                )}
+                <p className="text-xs font-semibold text-white line-clamp-1 drop-shadow">
+                  {img.title || "Photo sans titre"}
+                </p>
               </div>
             </motion.div>
           ))}
@@ -175,9 +199,9 @@ export default function AdminGalleryPage() {
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        title="Ajouter une photo à la galerie"
+        title={editing ? "Modifier la photo" : "Ajouter une photo à la galerie"}
         badge="Médiathèque FSCPE"
-        description="Chargez une image via le widget Cloudinary (Appareil, URL web, Google Drive, Dropbox ou Caméra)."
+        description="Chargez ou ajustez une image de terrain (Appareil, URL web, Google Drive, Dropbox ou Caméra)."
         size="lg"
       >
         <div className="space-y-5">
@@ -218,7 +242,8 @@ export default function AdminGalleryPage() {
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-2 border-t border-navy-100">
+          {/* Footer d'action collant (sticky) pour garantir l'accessibilité sur mobile */}
+          <div className="sticky bottom-0 -mx-5 -mb-5 sm:-mx-8 sm:-mb-6 mt-6 px-5 py-3.5 sm:px-8 bg-white/95 backdrop-blur-md border-t border-navy-100 flex items-center justify-end gap-3 z-30 shadow-[0_-8px_16px_rgba(0,0,0,0.04)]">
             <button
               type="button"
               onClick={() => setModalOpen(false)}
@@ -230,10 +255,10 @@ export default function AdminGalleryPage() {
               type="button"
               onClick={() => saveMutation.mutate()}
               disabled={saveMutation.isPending || !pending?.url}
-              className="flex items-center justify-center gap-2 rounded-full bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-primary-700 disabled:opacity-50 transition-all"
+              className="flex items-center justify-center gap-2 rounded-full bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-primary-700 disabled:opacity-50 transition-all min-h-[42px]"
             >
               {saveMutation.isPending && <Loader2 className="animate-spin" size={16} />}
-              Ajouter à la galerie
+              {editing ? "Mettre à jour la photo" : "Ajouter à la galerie"}
             </button>
           </div>
         </div>

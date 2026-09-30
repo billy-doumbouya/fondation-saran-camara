@@ -180,26 +180,28 @@ export default function AdminEventsPage() {
     {
       header: "Actions",
       render: (r) => (
-        <div className="flex gap-1.5">
+        <div className="flex items-center justify-end gap-1.5">
           <button
             type="button"
             onClick={() => openEdit(r)}
-            className="rounded-lg p-2 text-navy-600 hover:bg-navy-100 transition-colors"
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-50 text-primary-700 hover:bg-primary-100 transition-colors shadow-2xs"
             title="Modifier"
+            aria-label="Modifier"
           >
             <Pencil size={15} />
           </button>
           <button
             type="button"
             onClick={() => setDeleteId(r.id)}
-            className="rounded-lg p-2 text-red-500 hover:bg-red-50 transition-colors"
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50 text-red-600 hover:bg-red-100 transition-colors shadow-2xs"
             title="Supprimer"
+            aria-label="Supprimer"
           >
             <Trash2 size={15} />
           </button>
         </div>
       ),
-      className: "w-24 text-right",
+      className: "w-28 text-right",
     },
   ];
 
@@ -326,8 +328,8 @@ export default function AdminEventsPage() {
             </label>
           </div>
 
-          {/* Boutons d'action */}
-          <div className="flex items-center justify-end gap-3 pt-2 border-t border-navy-100">
+          {/* Boutons d'action collants pour accessibilité mobile */}
+          <div className="sticky bottom-0 -mx-5 -mb-5 sm:-mx-8 sm:-mb-6 mt-6 px-5 py-3.5 sm:px-8 bg-white/95 backdrop-blur-md border-t border-navy-100 flex items-center justify-end gap-3 z-30 shadow-[0_-8px_16px_rgba(0,0,0,0.04)]">
             <button
               type="button"
               onClick={() => setModalOpen(false)}
@@ -338,7 +340,7 @@ export default function AdminEventsPage() {
             <button
               type="submit"
               disabled={saveMutation.isPending}
-              className="flex items-center justify-center gap-2 rounded-full bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-primary-700 disabled:opacity-60 transition-all"
+              className="flex items-center justify-center gap-2 rounded-full bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-primary-700 disabled:opacity-60 transition-all min-h-[42px]"
             >
               {saveMutation.isPending && <Loader2 className="animate-spin" size={16} />}
               {editing ? "Mettre à jour" : "Créer l'événement"}

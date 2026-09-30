@@ -306,7 +306,7 @@ export default function AdminSettingsPage() {
           <button
             type="submit"
             disabled={saveSettingsMutation.isPending}
-            className="flex items-center justify-center gap-2 rounded-full bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-[0_12px_25px_rgba(34,122,63,0.22)] transition-all hover:-translate-y-0.5 hover:bg-primary-700 disabled:opacity-60"
+            className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_25px_rgba(34,122,63,0.22)] transition-all hover:-translate-y-0.5 hover:bg-primary-700 disabled:opacity-60 min-h-[44px]"
           >
             {saveSettingsMutation.isPending && <Loader2 className="animate-spin" size={16} />}
             <Save size={16} /> Enregistrer les paramètres
@@ -402,7 +402,7 @@ export default function AdminSettingsPage() {
             <button
               type="submit"
               disabled={updatePasswordMutation.isPending}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-navy-900 px-5 py-2.5 text-sm font-semibold text-white shadow transition-all hover:bg-navy-800 disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-navy-900 px-5 py-3 text-sm font-semibold text-white shadow transition-all hover:bg-navy-800 disabled:opacity-60 min-h-[44px]"
             >
               {updatePasswordMutation.isPending && <Loader2 className="animate-spin" size={16} />}
               Mettre à jour le mot de passe

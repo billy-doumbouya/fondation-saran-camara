@@ -82,7 +82,13 @@ export const siteSettingsSchema = yup.object({
     .required("Nom du fondateur requis"),
   address: yup.string().trim().min(2).max(250).required("Adresse requise"),
   phone: yup.string().trim().min(6).max(50).required("Téléphone requis"),
-  phoneSecondary: yup.string().trim().max(50).nullable().optional(),
+  phoneSecondary: yup
+    .string()
+    .trim()
+    .transform((v) => (v === "" || v === undefined ? null : v))
+    .max(50)
+    .nullable()
+    .optional(),
   email: yup.string().trim().email("E-mail invalide").required("E-mail requis"),
   quote: yup.string().trim().min(10).max(500).required("Citation requise"),
   whatsappNumber: yup
@@ -100,12 +106,14 @@ export const siteSettingsSchema = yup.object({
   heroVideoUrl: yup
     .string()
     .trim()
+    .transform((v) => (v === "" || v === undefined ? null : v))
     .url("URL vidéo invalide")
     .nullable()
     .optional(),
   heroPosterUrl: yup
     .string()
     .trim()
+    .transform((v) => (v === "" || v === undefined ? null : v))
     .url("URL poster invalide")
     .nullable()
     .optional(),
@@ -131,7 +139,7 @@ export type AdminPasswordUpdateFormValues = yup.InferType<
 >;
 
 export const newsSchema = yup.object({
-  title: yup.string().trim().min(3).max(250).required("Titre requis"),
+  title: yup.string().trim().min(3, "Le titre doit contenir au moins 3 caractères").max(250).required("Titre requis"),
   slug: yup
     .string()
     .trim()
@@ -140,75 +148,193 @@ export const newsSchema = yup.object({
       "Le slug ne doit contenir que des minuscules, chiffres et tirets",
     )
     .required("Slug requis"),
-  excerpt: yup.string().trim().min(10).max(500).required("Résumé requis"),
-  content: yup.string().trim().min(20).required("Contenu requis"),
-  coverImageUrl: yup.string().url().nullable().optional(),
-  coverImagePublicId: yup.string().nullable().optional(),
+  excerpt: yup.string().trim().min(10, "Le résumé doit faire au moins 10 caractères").max(500).required("Résumé requis"),
+  content: yup.string().trim().min(20, "Le contenu doit faire au moins 20 caractères").required("Contenu requis"),
+  coverImageUrl: yup
+    .string()
+    .trim()
+    .transform((v) => (v === "" || v === undefined ? null : v))
+    .url("URL d'image invalide")
+    .nullable()
+    .optional(),
+  coverImagePublicId: yup
+    .string()
+    .trim()
+    .transform((v) => (v === "" || v === undefined ? null : v))
+    .nullable()
+    .optional(),
   published: yup.boolean().default(false),
 });
 export type NewsFormValues = yup.InferType<typeof newsSchema>;
 
 export const testimonialSchema = yup.object({
-  authorName: yup.string().trim().min(2).max(150).required("Nom requis"),
-  authorRole: yup.string().trim().max(150).nullable().optional(),
-  quote: yup.string().trim().min(10).max(2000).required("Témoignage requis"),
-  photoUrl: yup.string().url().nullable().optional(),
-  photoPublicId: yup.string().nullable().optional(),
-  rating: yup.number().min(1).max(5).default(5),
+  authorName: yup.string().trim().min(2, "Nom requis (min 2 caractères)").max(150).required("Nom requis"),
+  authorRole: yup
+    .string()
+    .trim()
+    .transform((v) => (v === "" || v === undefined ? null : v))
+    .max(150)
+    .nullable()
+    .optional(),
+  quote: yup.string().trim().min(10, "Témoignage trop court (min 10 caractères)").max(2000).required("Témoignage requis"),
+  photoUrl: yup
+    .string()
+    .trim()
+    .transform((v) => (v === "" || v === undefined ? null : v))
+    .url("URL de photo invalide")
+    .nullable()
+    .optional(),
+  photoPublicId: yup
+    .string()
+    .trim()
+    .transform((v) => (v === "" || v === undefined ? null : v))
+    .nullable()
+    .optional(),
+  rating: yup
+    .number()
+    .transform((v, orig) => (String(orig).trim() === "" || orig === null || orig === undefined || isNaN(v) ? 5 : v))
+    .min(1)
+    .max(5)
+    .default(5),
   published: yup.boolean().default(true),
 });
 export type TestimonialFormValues = yup.InferType<typeof testimonialSchema>;
 
 export const teamMemberSchema = yup.object({
-  fullName: yup.string().trim().min(2).max(150).required("Nom requis"),
-  role: yup.string().trim().min(2).max(150).required("Fonction requise"),
-  bio: yup.string().trim().max(3000).nullable().optional(),
-  photoUrl: yup.string().url().nullable().optional(),
-  photoPublicId: yup.string().nullable().optional(),
+  fullName: yup.string().trim().min(2, "Nom complet requis (min 2 caractères)").max(150).required("Nom requis"),
+  role: yup.string().trim().min(2, "Fonction requise").max(150).required("Fonction requise"),
+  bio: yup
+    .string()
+    .trim()
+    .transform((v) => (v === "" || v === undefined ? null : v))
+    .max(3000)
+    .nullable()
+    .optional(),
+  photoUrl: yup
+    .string()
+    .trim()
+    .transform((v) => (v === "" || v === undefined ? null : v))
+    .url("URL de photo invalide")
+    .nullable()
+    .optional(),
+  photoPublicId: yup
+    .string()
+    .trim()
+    .transform((v) => (v === "" || v === undefined ? null : v))
+    .nullable()
+    .optional(),
   organBody: yup
     .string()
     .oneOf(["bureau", "ca", "fondatrice"])
     .default("bureau"),
-  displayOrder: yup.number().default(0),
+  displayOrder: yup
+    .number()
+    .transform((v, orig) => (String(orig).trim() === "" || orig === null || orig === undefined || isNaN(v) ? 0 : v))
+    .default(0),
 });
 export type TeamMemberFormValues = yup.InferType<typeof teamMemberSchema>;
 
 export const galleryImageSchema = yup.object({
-  title: yup.string().trim().max(200).nullable().optional(),
-  imageUrl: yup.string().url().required("Image requise"),
-  imagePublicId: yup.string().required("Image requise"),
-  category: yup.string().trim().max(100).nullable().optional(),
+  title: yup
+    .string()
+    .trim()
+    .transform((v) => (v === "" || v === undefined ? null : v))
+    .max(200)
+    .nullable()
+    .optional(),
+  imageUrl: yup
+    .string()
+    .trim()
+    .url("URL d'image invalide")
+    .required("Image requise"),
+  imagePublicId: yup
+    .string()
+    .trim()
+    .transform((v) => (v === "" || v === undefined ? null : v))
+    .nullable()
+    .optional(),
+  category: yup
+    .string()
+    .trim()
+    .transform((v) => (v === "" || v === undefined ? null : v))
+    .max(100)
+    .nullable()
+    .optional(),
 });
 export type GalleryImageFormValues = yup.InferType<typeof galleryImageSchema>;
 
 export const programSchema = yup.object({
-  title: yup.string().trim().min(3).max(250).required("Titre requis"),
+  title: yup.string().trim().min(3, "Titre requis (min 3 caractères)").max(250).required("Titre requis"),
   slug: yup
     .string()
     .trim()
-    .matches(/^[a-z0-9-]+$/, "Slug invalide")
+    .matches(/^[a-z0-9-]+$/, "Slug invalide (minuscules, chiffres et tirets uniquement)")
     .required("Slug requis"),
-  summary: yup.string().trim().min(10).max(500).required("Résumé requis"),
-  content: yup.string().trim().min(20).required("Contenu requis"),
-  coverImageUrl: yup.string().url().nullable().optional(),
-  coverImagePublicId: yup.string().nullable().optional(),
+  summary: yup.string().trim().min(10, "Résumé trop court (min 10 caractères)").max(500).required("Résumé requis"),
+  content: yup.string().trim().min(20, "Présentation trop courte (min 20 caractères)").required("Contenu requis"),
+  coverImageUrl: yup
+    .string()
+    .trim()
+    .transform((v) => (v === "" || v === undefined ? null : v))
+    .url("URL d'image invalide")
+    .nullable()
+    .optional(),
+  coverImagePublicId: yup
+    .string()
+    .trim()
+    .transform((v) => (v === "" || v === undefined ? null : v))
+    .nullable()
+    .optional(),
   pillar: yup
     .string()
     .oneOf(["education", "protection", "orphelins", "social"])
     .required("Pilier requis"),
-  beneficiariesCount: yup.number().min(0).nullable().optional(),
+  beneficiariesCount: yup
+    .number()
+    .transform((v, orig) => (String(orig).trim() === "" || orig === null || orig === undefined || isNaN(v) ? null : v))
+    .min(0, "Le nombre doit être positif")
+    .nullable()
+    .optional(),
   published: yup.boolean().default(true),
 });
 export type ProgramFormValues = yup.InferType<typeof programSchema>;
 
 export const eventSchema = yup.object({
-  title: yup.string().trim().min(3).max(250).required("Titre requis"),
-  description: yup.string().trim().max(3000).nullable().optional(),
-  location: yup.string().trim().max(250).nullable().optional(),
+  title: yup.string().trim().min(3, "Titre requis (min 3 caractères)").max(250).required("Titre requis"),
+  description: yup
+    .string()
+    .trim()
+    .transform((v) => (v === "" || v === undefined ? null : v))
+    .max(3000)
+    .nullable()
+    .optional(),
+  location: yup
+    .string()
+    .trim()
+    .transform((v) => (v === "" || v === undefined ? null : v))
+    .max(250)
+    .nullable()
+    .optional(),
   startAt: yup.string().required("Date de début requise"),
-  endAt: yup.string().nullable().optional(),
-  coverImageUrl: yup.string().url().nullable().optional(),
-  coverImagePublicId: yup.string().nullable().optional(),
+  endAt: yup
+    .string()
+    .trim()
+    .transform((v) => (v === "" || v === undefined ? null : v))
+    .nullable()
+    .optional(),
+  coverImageUrl: yup
+    .string()
+    .trim()
+    .transform((v) => (v === "" || v === undefined ? null : v))
+    .url("URL d'image invalide")
+    .nullable()
+    .optional(),
+  coverImagePublicId: yup
+    .string()
+    .trim()
+    .transform((v) => (v === "" || v === undefined ? null : v))
+    .nullable()
+    .optional(),
   published: yup.boolean().default(true),
 });
 export type EventFormValues = yup.InferType<typeof eventSchema>;

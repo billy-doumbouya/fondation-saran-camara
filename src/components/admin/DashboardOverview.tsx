@@ -86,62 +86,67 @@ export default function DashboardOverview({
 
   return (
     <div className="space-y-7">
-      {/* Bannière Maîtresse Executive */}
+      {/* Bannière Maîtresse Executive - Contraste & Lisibilité Maximale */}
       <motion.section
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: "easeOut" }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy-950 via-[#13203c] to-primary-950 p-6 text-white shadow-xl shadow-navy-950/10 sm:p-8 md:p-10 border border-white/10"
+        className="relative overflow-hidden rounded-3xl bg-[#0b1329] p-6 text-white shadow-xl shadow-navy-950/20 sm:p-8 md:p-10 border border-slate-700/60"
       >
-        {/* Cercles géométriques & Lueur ornementale */}
+        {/* Motif géométrique discret d'arrière-plan sans flou perturbateur */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full border-[32px] border-primary-500/15"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:20px_20px] opacity-40"
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -bottom-16 right-36 h-40 w-40 rounded-full bg-gold-400/15 blur-3xl"
+          className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full border-[24px] border-emerald-500/10"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute top-0 right-0 w-80 h-full bg-gradient-to-l from-emerald-950/30 via-transparent to-transparent pointer-events-none"
         />
 
-        <div className="relative flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
+        <div className="relative z-10 flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-gold-400/30 bg-gold-400/10 px-3.5 py-1 text-xs font-semibold text-gold-300 backdrop-blur-md">
+            <div className="inline-flex items-center gap-2 rounded-full border border-gold-400/40 bg-gold-400/15 px-3.5 py-1 text-xs font-semibold text-gold-300">
               <Sparkles size={14} className="text-gold-400" />
               <span className="font-mono uppercase tracking-widest text-[0.6875rem]">
                 Console de Pilotage Général · Conakry
               </span>
             </div>
 
-            <h1 className="font-display mt-4 text-2xl font-extrabold tracking-tight sm:text-3xl md:text-4xl">
+            <h1 className="font-display mt-4 text-2xl font-black tracking-tight text-white sm:text-3xl md:text-4xl leading-tight">
               Bienvenue sur l&apos;espace de gestion{" "}
-              <span className="bg-gradient-to-r from-gold-300 via-gold-200 to-primary-300 bg-clip-text text-transparent">
+              <span className="text-gold-400 font-black">
                 FSCPE
               </span>
             </h1>
 
-            <p className="mt-2.5 text-sm text-slate-300 leading-relaxed max-w-xl">
+            <p className="mt-2.5 text-sm sm:text-base text-slate-100 font-normal leading-relaxed max-w-xl">
               Supervisez les dons enregistrés, coordonnez la publication des
               articles et gérez les programmes d&apos;aide aux orphelins de Guinée.
             </p>
 
-            <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-slate-300">
-              <span className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 backdrop-blur-xs font-mono">
+            <div className="mt-5 flex flex-wrap items-center gap-3 text-xs">
+              <span className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-3 py-1.5 font-mono text-white font-medium">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                 {contentTotal} ressources actives
               </span>
               <span className="text-slate-400">•</span>
-              <span className="font-mono text-gold-300 font-semibold">
+              <span className="rounded-xl border border-gold-400/30 bg-gold-400/15 px-3 py-1.5 font-mono text-gold-300 font-bold">
                 {donationsCount} contribution{donationsCount > 1 ? "s" : ""}
               </span>
             </div>
           </div>
 
-          {/* Raccourcis d'action rapide dans le Hero */}
+          {/* Raccourcis d'action rapide dans le Hero avec contraste élevé */}
           <div className="flex flex-wrap items-center gap-3">
             <Link href="/admin/news">
               <AdminButton
                 variant="gold"
                 size="sm"
+                className="font-bold shadow-md hover:brightness-110"
                 leftIcon={<Plus size={16} />}
               >
                 Nouvel article
@@ -152,7 +157,7 @@ export default function DashboardOverview({
               <AdminButton
                 variant="outline"
                 size="sm"
-                className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white"
+                className="bg-white/15 border-white/30 text-white hover:bg-white/25 hover:text-white font-medium shadow-sm"
                 leftIcon={<HeartHandshake size={16} />}
               >
                 Voir les dons
@@ -163,10 +168,10 @@ export default function DashboardOverview({
               href="/"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3.5 py-2 text-xs font-semibold text-white hover:bg-white/20 transition-colors border border-white/15"
+              className="inline-flex items-center gap-2 rounded-xl bg-white/15 px-3.5 py-2 text-xs font-semibold text-white hover:bg-white/25 transition-colors border border-white/25 shadow-sm"
             >
               <span>Site public</span>
-              <ExternalLink size={13} className="text-slate-300" />
+              <ExternalLink size={13} className="text-slate-200" />
             </a>
           </div>
         </div>

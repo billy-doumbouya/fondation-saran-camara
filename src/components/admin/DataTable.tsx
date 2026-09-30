@@ -291,7 +291,13 @@ export default function DataTable<T extends object>({
 
       {/* Tableau principal */}
       <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-sm ring-1 ring-slate-100">
-        <div className="overflow-x-auto">
+        {/* Indication visuelle mobile pour le défilement horizontal */}
+        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/90 px-3.5 py-1.5 text-[11px] text-slate-500 sm:hidden">
+          <span>Glissez pour voir toutes les colonnes</span>
+          <span className="font-semibold text-primary-700">Actions fixes à droite ➔</span>
+        </div>
+
+        <div className="overflow-x-auto overscroll-x-contain">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-slate-100 bg-slate-50/75 text-[11px] font-bold uppercase tracking-wider text-slate-500">
               <tr>
@@ -305,30 +311,34 @@ export default function DataTable<T extends object>({
                     />
                   </th>
                 )}
-                {columns.map((col, idx) => (
-                  <th
-                    key={idx}
-                    onClick={() => handleSort(col.sortKey)}
-                    className={cn(
-                      "px-4 py-3.5 select-none",
-                      col.sortKey && "cursor-pointer hover:bg-slate-100/70 hover:text-navy-950",
-                      col.className
-                    )}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <span>{col.header}</span>
-                      {col.sortKey && (
-                        <ArrowUpDown
-                          size={12}
-                          className={cn(
-                            "opacity-40 transition-opacity",
-                            sortKey === col.sortKey && "opacity-100 text-gold-600"
-                          )}
-                        />
+                {columns.map((col, idx) => {
+                  const isActionsCol = col.header.toLowerCase().includes("action");
+                  return (
+                    <th
+                      key={idx}
+                      onClick={() => handleSort(col.sortKey)}
+                      className={cn(
+                        "px-4 py-3.5 select-none",
+                        col.sortKey && "cursor-pointer hover:bg-slate-100/70 hover:text-navy-950",
+                        isActionsCol && "sticky right-0 bg-slate-50/95 backdrop-blur-xs z-10 shadow-[-6px_0_10px_-3px_rgba(0,0,0,0.06)]",
+                        col.className
                       )}
-                    </div>
-                  </th>
-                ))}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span>{col.header}</span>
+                        {col.sortKey && (
+                          <ArrowUpDown
+                            size={12}
+                            className={cn(
+                              "opacity-40 transition-opacity",
+                              sortKey === col.sortKey && "opacity-100 text-gold-600"
+                            )}
+                          />
+                        )}
+                      </div>
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -341,14 +351,23 @@ export default function DataTable<T extends object>({
                         <div className="h-4 w-4 rounded bg-slate-200" />
                       </td>
                     )}
-                    {columns.map((_, cIdx) => (
-                      <td key={cIdx} className="px-4 py-4">
-                        <div
-                          className="h-4 rounded bg-slate-200/80"
-                          style={{ width: `${60 + ((rIdx + cIdx) % 4) * 10}%` }}
-                        />
-                      </td>
-                    ))}
+                    {columns.map((col, cIdx) => {
+                      const isActionsCol = col.header.toLowerCase().includes("action");
+                      return (
+                        <td
+                          key={cIdx}
+                          className={cn(
+                            "px-4 py-4",
+                            isActionsCol && "sticky right-0 bg-white/95 z-10 shadow-[-6px_0_10px_-3px_rgba(0,0,0,0.06)]"
+                          )}
+                        >
+                          <div
+                            className="h-4 rounded bg-slate-200/80"
+                            style={{ width: `${60 + ((rIdx + cIdx) % 4) * 10}%` }}
+                          />
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))
               ) : paginatedRows.length === 0 ? (
@@ -381,7 +400,7 @@ export default function DataTable<T extends object>({
                     <tr
                       key={keyStr}
                       className={cn(
-                        "transition-colors duration-150 hover:bg-slate-50/70",
+                        "group transition-colors duration-150 hover:bg-slate-50/70",
                         isRowSelected && "bg-primary-50/40"
                       )}
                     >
@@ -395,14 +414,21 @@ export default function DataTable<T extends object>({
                           />
                         </td>
                       )}
-                      {columns.map((col, idx) => (
-                        <td
-                          key={idx}
-                          className={cn("px-4 py-3.5 align-middle text-xs sm:text-sm", col.className)}
-                        >
-                          {col.render(row)}
-                        </td>
-                      ))}
+                      {columns.map((col, idx) => {
+                        const isActionsCol = col.header.toLowerCase().includes("action");
+                        return (
+                          <td
+                            key={idx}
+                            className={cn(
+                              "px-4 py-3.5 align-middle text-xs sm:text-sm",
+                              isActionsCol && "sticky right-0 bg-white group-hover:bg-slate-50/95 z-10 shadow-[-6px_0_10px_-3px_rgba(0,0,0,0.06)]",
+                              col.className
+                            )}
+                          >
+                            {col.render(row)}
+                          </td>
+                        );
+                      })}
                     </tr>
                   );
                 })
