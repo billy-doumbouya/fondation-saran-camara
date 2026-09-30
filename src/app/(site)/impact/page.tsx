@@ -82,13 +82,10 @@ export default async function ImpactPage() {
           <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {/* Carte principale en vedette (Navy) */}
             <AnimatedSection delay={0.06} className="sm:col-span-2">
-              <div className="relative h-full overflow-hidden rounded-lg bg-navy-900 p-7 text-white sm:p-8 shadow-md">
+              <div className="mesh-luxury-dark relative h-full overflow-hidden rounded-lg p-7 text-white shadow-md sm:p-8">
                 <span className="absolute inset-x-0 top-0 h-0.5 bg-gold-500" aria-hidden />
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-primary-500/15 blur-3xl"
-                />
-                <div className="relative flex flex-col justify-between h-full">
+                <ImpactPathMesh tone="gold" className="h-52 w-80 opacity-70" />
+                <div className="relative z-10 flex h-full flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between">
                       <span className="inline-flex items-center gap-1.5 rounded-sm bg-white/10 px-2.5 py-1 font-mono text-[0.6875rem] uppercase tracking-wider text-primary-200">
@@ -122,9 +119,10 @@ export default async function ImpactPage() {
 
             {/* Carte Programmes */}
             <AnimatedSection delay={0.12}>
-              <div className="relative flex h-full flex-col justify-between overflow-hidden rounded-lg hairline bg-white p-6 sm:p-7 shadow-sm transition-all duration-300 hover:hairline-strong hover:-translate-y-0.5">
+              <div className="mesh-soft relative flex h-full flex-col justify-between overflow-hidden rounded-lg hairline bg-white p-6 shadow-sm transition-all duration-300 hover:hairline-strong hover:-translate-y-0.5 sm:p-7">
                 <span className="absolute inset-x-0 top-0 h-0.5 bg-gold-500" aria-hidden />
-                <div>
+                <ImpactPathMesh tone="primary" />
+                <div className="relative z-10">
                   <div className="flex h-11 w-11 items-center justify-center rounded-md hairline bg-primary-50 text-primary-700">
                     <GraduationCap size={22} strokeWidth={1.75} />
                   </div>
@@ -146,9 +144,10 @@ export default async function ImpactPage() {
 
             {/* Carte Zone d'action */}
             <AnimatedSection delay={0.18}>
-              <div className="relative flex h-full flex-col justify-between overflow-hidden rounded-lg hairline bg-white p-6 sm:p-7 shadow-sm transition-all duration-300 hover:hairline-strong hover:-translate-y-0.5">
+              <div className="mesh-soft relative flex h-full flex-col justify-between overflow-hidden rounded-lg hairline bg-white p-6 shadow-sm transition-all duration-300 hover:hairline-strong hover:-translate-y-0.5 sm:p-7">
                 <span className="absolute inset-x-0 top-0 h-0.5 bg-gold-500" aria-hidden />
-                <div>
+                <ImpactPathMesh tone="gold" />
+                <div className="relative z-10">
                   <div className="flex h-11 w-11 items-center justify-center rounded-md hairline bg-gold-50 text-gold-700">
                     <MapPin size={22} strokeWidth={1.75} />
                   </div>
@@ -244,16 +243,19 @@ export default async function ImpactPage() {
               icon={<Receipt size={22} className="text-primary-700" strokeWidth={1.75} />}
               title="Zéro versement en liquide"
               text="Aucun don n'est transmis sous forme d'espèces aux familles. La Fondation règle directement les établissements scolaires et fournisseurs sur présentation de reçus officiels."
+              tone="primary"
             />
             <TransparenceCard
               icon={<FileCheck2 size={22} className="text-gold-700" strokeWidth={1.75} />}
               title="Sélection sur critères rigoureux"
               text="La priorité est accordée aux orphelins totaux, aux orphelins de père ou de mère, et aux enfants en situation d'abandon ou de déscolarisation imminente."
+              tone="gold"
             />
             <TransparenceCard
               icon={<Eye size={22} className="text-navy-700" strokeWidth={1.75} />}
               title="Suivi de terrain régulier"
               text="Nos coordinateurs effectuent des visites régulières dans les écoles partenaires afin de vérifier l'assiduité, les notes et l'épanouissement de chaque enfant."
+              tone="navy"
             />
           </div>
         </div>
@@ -364,12 +366,18 @@ function PillarCard({
     navy: "bg-navy-50 text-navy-700 border-navy-200/60",
     gold: "bg-gold-50 text-gold-700 border-gold-200/60",
   }[tone];
+  const accentCls = {
+    primary: "bg-primary-600",
+    navy: "bg-navy-700",
+    gold: "bg-gold-500",
+  }[tone];
 
   return (
     <AnimatedSection delay={0.08}>
-      <div className="relative flex h-full flex-col justify-between overflow-hidden rounded-lg hairline bg-white p-6 shadow-sm transition-all duration-300 hover:hairline-strong hover:-translate-y-0.5">
-        <span className="absolute inset-x-0 top-0 h-0.5 bg-gold-500" aria-hidden />
-        <div>
+      <div className="mesh-soft relative flex h-full flex-col justify-between overflow-hidden rounded-lg hairline bg-white p-6 shadow-sm transition-all duration-300 hover:hairline-strong hover:-translate-y-0.5">
+        <span className={`absolute inset-x-0 top-0 h-0.5 ${accentCls}`} aria-hidden />
+        <ImpactPathMesh tone={tone} />
+        <div className="relative z-10">
           <div className="flex items-center justify-between">
             <span
               className={`flex h-11 w-11 items-center justify-center rounded-md border ${iconCls}`}
@@ -398,25 +406,62 @@ function TransparenceCard({
   icon,
   title,
   text,
+  tone,
 }: {
   icon: React.ReactNode;
   title: string;
   text: string;
+  tone: "primary" | "navy" | "gold";
 }) {
+  const accentCls = {
+    primary: "bg-primary-600",
+    navy: "bg-navy-700",
+    gold: "bg-gold-500",
+  }[tone];
+
   return (
     <AnimatedSection delay={0.08}>
-      <div className="relative h-full overflow-hidden rounded-lg hairline bg-white p-6 shadow-sm">
-        <span className="absolute inset-x-0 top-0 h-0.5 bg-gold-500" aria-hidden />
-        <div className="flex h-10 w-10 items-center justify-center rounded-md hairline bg-navy-50">
+      <div className="mesh-soft relative h-full overflow-hidden rounded-lg hairline bg-white p-6 shadow-sm">
+        <span className={`absolute inset-x-0 top-0 h-0.5 ${accentCls}`} aria-hidden />
+        <ImpactPathMesh tone={tone} className="h-28 w-48 opacity-70" />
+        <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-md hairline bg-white/80">
           {icon}
         </div>
-        <h4 className="font-display mt-4 text-base font-bold text-navy-900">
+        <h4 className="font-display relative z-10 mt-4 text-base font-bold text-navy-900">
           {title}
         </h4>
-        <p className="mt-2 text-xs sm:text-sm leading-relaxed text-navy-500">
+        <p className="relative z-10 mt-2 text-xs leading-relaxed text-navy-500 sm:text-sm">
           {text}
         </p>
       </div>
     </AnimatedSection>
+  );
+}
+
+function ImpactPathMesh({
+  tone,
+  className = "",
+}: {
+  tone: "primary" | "navy" | "gold";
+  className?: string;
+}) {
+  const toneCls = {
+    primary: "text-primary-600/15",
+    navy: "text-navy-700/15",
+    gold: "text-gold-600/20",
+  }[tone];
+
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 240 160"
+      fill="none"
+      className={`pointer-events-none absolute -right-4 -top-3 h-40 w-60 ${toneCls} ${className}`}
+    >
+      <path d="M-20 126C25 74 43 26 94 31c47 5 48 63 92 66 28 2 39-25 74-47" stroke="currentColor" />
+      <path d="M-20 142C27 91 49 43 96 47c43 4 48 56 89 59 30 2 45-22 75-42" stroke="currentColor" />
+      <path d="M-20 158C29 108 54 61 99 63c39 2 48 49 87 52 31 2 50-19 74-37" stroke="currentColor" />
+      <path d="M-20 110C22 56 37 10 91 15c51 5 48 70 96 72 24 1 32-27 73-52" stroke="currentColor" />
+    </svg>
   );
 }

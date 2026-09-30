@@ -241,7 +241,7 @@ export default function AdminEventsPage() {
         onClose={() => setModalOpen(false)}
         title={editing ? "Modifier l'événement" : "Créer un nouvel événement"}
         badge="Agenda FSCPE"
-        description="Renseignez les détails, la date, le lieu et l'affiche officielle de l'événement."
+        description="Renseignez les détails, la date et le lieu. L’affiche est facultative et apparaîtra sur la carte publique."
         size="xl"
       >
         <form onSubmit={handleSubmit((v) => saveMutation.mutate(v))} className="space-y-5">
@@ -340,7 +340,7 @@ export default function AdminEventsPage() {
             <button
               type="submit"
               disabled={saveMutation.isPending}
-              className="flex items-center justify-center gap-2 rounded-full bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-primary-700 disabled:opacity-60 transition-all min-h-[42px]"
+              className="flex items-center justify-center gap-2 rounded-full bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-primary-700 disabled:opacity-60 transition-all min-h-10.5"
             >
               {saveMutation.isPending && <Loader2 className="animate-spin" size={16} />}
               {editing ? "Mettre à jour" : "Créer l'événement"}

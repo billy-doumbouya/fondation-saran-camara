@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { FolderOpen, Sparkles, Shield, HeartHandshake } from "lucide-react";
+import Link from "next/link";
+import { AlertTriangle, ArrowRight, FolderOpen, HeartHandshake, Sparkles } from "lucide-react";
 import AnimatedSection from "@/components/site/animated-section";
 import AtmosphereBackground from "@/components/site/ambient/AtmosphereBackground";
 import ComplexGeometricOverlay from "@/components/site/ambient/ComplexGeometricOverlay";
@@ -14,7 +15,9 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ProgramsPage() {
-  const programs = await programsRepo.listPublished().catch(() => []);
+  const programsResult = await programsRepo.listPublished().catch(() => null);
+  const loadError = programsResult === null;
+  const programs = programsResult ?? [];
 
   // Stats agrégées
   const totalBeneficiaries = programs.reduce(
@@ -24,18 +27,18 @@ export default async function ProgramsPage() {
 
   return (
     <>
-      {/* ——— Hero immersif : WebGL 3D Mesh + Guilloché or + Mesh Aurora ——— */}
+      {/* ——— Hero ——— */}
       <AtmosphereBackground
         variant="dark"
-        enable3dMesh={true}
-        enableGeometry={true}
-        showSacredCircles={true}
-        className="pb-28 pt-32 text-white sm:pb-36 sm:pt-40"
+        enable3dMesh={false}
+        enableGeometry={false}
+        showSacredCircles={false}
+        className="pb-24 pt-28 text-white sm:pb-28 sm:pt-32"
       >
         {/* Texture photographique subtile */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 z-0 opacity-15 mix-blend-overlay"
+          className="pointer-events-none absolute inset-0 z-0 opacity-20 mix-blend-overlay"
           style={{
             backgroundImage:
               "url('https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1600&q=80')",
@@ -47,20 +50,16 @@ export default async function ProgramsPage() {
         <div className="container-app relative z-10">
           <AnimatedSection direction="up">
             <div className="mx-auto max-w-3xl text-center">
-              {/* Badge pulsant */}
-              <div className="inline-flex items-center gap-2 rounded-full border border-gold-500/40 bg-gold-500/10 px-4 py-1.5 text-xs font-semibold text-gold-300 backdrop-blur-md shadow-lg shadow-gold-500/5">
-                <span className="flex h-2 w-2 relative">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-gold-500" />
-                </span>
+              <div className="inline-flex items-center gap-2 border-b border-gold-400/40 pb-2 text-xs font-semibold text-gold-200">
+                <Sparkles size={14} className="text-gold-400" />
                 <span className="font-mono uppercase tracking-widest text-[0.6875rem]">
                   Éducation · Protection · Solidarité
                 </span>
               </div>
 
-              <h1 className="font-display mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-6xl drop-shadow-sm">
+              <h1 className="font-display mt-6 text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl">
                 Des projets concrets pour{" "}
-                <span className="bg-gradient-to-r from-gold-300 via-gold-200 to-primary-300 bg-clip-text text-transparent">
+                <span className="bg-linear-to-r from-gold-300 via-gold-200 to-primary-300 bg-clip-text text-transparent">
                   ouvrir des horizons
                 </span>
                 .
@@ -72,20 +71,21 @@ export default async function ProgramsPage() {
                 au plus près des enfants orphelins et vulnérables de Guinée.
               </p>
 
-              {/* Piliers de confiance */}
-              <div className="mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs text-navy-200">
-                <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 backdrop-blur-md">
-                  <Sparkles size={15} className="text-gold-400" />
-                  <span>Programmes suivis et évalués</span>
-                </div>
-                <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 backdrop-blur-md">
-                  <Shield size={15} className="text-primary-400" />
-                  <span>ONG officiellement agréée en Guinée</span>
-                </div>
-                <div className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 backdrop-blur-md">
-                  <HeartHandshake size={15} className="text-emerald-400" />
-                  <span>100% de traçabilité des dons</span>
-                </div>
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                <Link
+                  href="#catalogue"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-gold-400 px-5 py-3 font-display text-sm font-semibold text-navy-950 transition-colors hover:bg-gold-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-navy-900"
+                >
+                  Explorer les programmes
+                  <ArrowRight size={16} />
+                </Link>
+                <Link
+                  href="/don"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-white/30 bg-white/5 px-5 py-3 font-display text-sm font-semibold text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-300"
+                >
+                  <HeartHandshake size={16} />
+                  Soutenir la FSCPE
+                </Link>
               </div>
             </div>
           </AnimatedSection>
@@ -93,22 +93,12 @@ export default async function ProgramsPage() {
       </AtmosphereBackground>
 
       {/* ——— Section Principale : Stats + Filtres + Grille ——— */}
-      <section className="relative -mt-16 overflow-hidden pb-24 sm:pb-32">
-        {/* Trame géométrique douce sur fond crème */}
+      <section id="catalogue" className="relative overflow-hidden py-12 sm:py-16">
         <ComplexGeometricOverlay
           variant="light"
-          opacity={0.22}
+          opacity={0.1}
           showSacredCircles={false}
           className="pointer-events-none -z-10"
-        />
-        {/* Mesh orbes clairs */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -left-40 top-20 h-[420px] w-[420px] rounded-full bg-primary-500/10 blur-[110px]"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-40 top-1/2 h-[420px] w-[420px] rounded-full bg-gold-500/10 blur-[110px]"
         />
 
         <div className="container-app relative z-10">
@@ -116,15 +106,8 @@ export default async function ProgramsPage() {
             <>
               {/* Header + stats flottantes */}
               <AnimatedSection>
-                <div className="relative overflow-hidden rounded-[28px] border border-white/90 bg-white/90 p-7 shadow-2xl shadow-navy-950/10 backdrop-blur-2xl sm:p-9">
-                  {/* Liseré supérieur or & émeraude */}
-                  <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-primary-600 via-gold-500 to-primary-700" />
-                  <div
-                    aria-hidden
-                    className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gold-400/10 blur-3xl"
-                  />
-
-                  <div className="relative flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+                <div className="border-b border-navy-200 pb-6">
+                  <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                       <div className="flex items-center gap-3">
                         <span className="h-px w-8 bg-gold-500/60" aria-hidden />
@@ -144,7 +127,7 @@ export default async function ProgramsPage() {
                       />
                       {totalBeneficiaries > 0 && (
                         <Stat
-                          label="Bénéficiaires"
+                          label="Bénéficiaires cumulés"
                           value={
                             totalBeneficiaries.toLocaleString("fr-FR") + "+"
                           }
@@ -152,10 +135,6 @@ export default async function ProgramsPage() {
                       )}
                     </div>
                   </div>
-                  <span
-                    className="mt-6 block h-px w-full bg-navy-100"
-                    aria-hidden
-                  />
                 </div>
               </AnimatedSection>
 
@@ -165,7 +144,7 @@ export default async function ProgramsPage() {
               </div>
             </>
           ) : (
-            <EmptyState />
+              <EmptyState loadError={loadError} />
           )}
         </div>
       </section>
@@ -189,18 +168,22 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 // ——— Empty state ———
-function EmptyState() {
+function EmptyState({ loadError }: { loadError: boolean }) {
+  const Icon = loadError ? AlertTriangle : FolderOpen;
+
   return (
     <AnimatedSection direction="fade">
-      <div className="mx-auto max-w-md rounded-[28px] border border-white/90 bg-white/90 p-12 text-center shadow-2xl shadow-navy-950/10 backdrop-blur-2xl">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-md hairline bg-white">
-          <FolderOpen size={24} className="text-navy-300" strokeWidth={1.5} />
+      <div className="mx-auto max-w-md border-t-2 border-gold-500 py-10 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-md hairline bg-white">
+          <Icon size={24} className={loadError ? "text-gold-700" : "text-navy-300"} strokeWidth={1.5} />
         </div>
         <h3 className="font-display mt-5 text-lg font-semibold text-navy-900">
-          Les programmes seront bientôt publiés
+          {loadError ? "Les programmes ne sont pas disponibles" : "Les programmes seront bientôt publiés"}
         </h3>
         <p className="mt-2 text-sm text-navy-500">
-          Les premiers projets de la FSCPE seront présentés ici prochainement.
+          {loadError
+            ? "Une erreur empêche leur chargement. Veuillez réessayer dans quelques instants."
+            : "Les premiers projets de la FSCPE seront présentés ici prochainement."}
         </p>
       </div>
     </AnimatedSection>

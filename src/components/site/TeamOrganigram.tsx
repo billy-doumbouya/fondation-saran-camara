@@ -827,7 +827,7 @@ export default function TeamOrganigram({ members }: TeamOrganigramProps) {
 
               {/* Corps de la modale */}
               <div className="p-6 sm:p-8 overflow-y-auto">
-                <div className="flex flex-col sm:flex-row items-start sm:items-end gap-5 -mt-16 sm:-mt-20 mb-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-end gap-5 mb-6">
                   {/* Portrait grand format */}
                   <div className="relative h-28 w-28 sm:h-32 sm:w-32 shrink-0 overflow-hidden rounded-2xl border-4 border-white bg-navy-100 shadow-xl">
                     {selectedMember.photoUrl ? (

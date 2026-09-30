@@ -7,7 +7,6 @@ import {
   ShieldCheck,
   HandHeart,
   Users2,
-  MapPin,
   CheckCircle2,
   ArrowLeft,
   HeartHandshake,
@@ -74,7 +73,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ProgramDetailPage({ params }: PageProps) {
   const { slug } = await params;
   const [program, allPrograms] = await Promise.all([
-    programsRepo.getBySlug(slug).catch(() => null),
+    programsRepo.getBySlug(slug),
     programsRepo.listPublished().catch(() => []),
   ]);
 
@@ -133,8 +132,8 @@ export default async function ProgramDetailPage({ params }: PageProps) {
               </span>
 
               <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1.5 font-mono text-[0.68rem] uppercase tracking-[0.16em] text-emerald-200 backdrop-blur-sm">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Projet actif
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                Programme publié
               </span>
             </div>
 
@@ -153,8 +152,8 @@ export default async function ProgramDetailPage({ params }: PageProps) {
         <div className="grid gap-8 lg:grid-cols-[1fr_360px] lg:items-start">
           <div className="space-y-8">
             <AnimatedSection delay={0.1}>
-              <div className="relative h-72 w-full overflow-hidden rounded-[28px] border border-[#ebe4d6] bg-white shadow-[0_30px_80px_rgba(12,23,38,0.12)] sm:h-96 md:h-[30rem]">
-                <span className="absolute inset-x-0 top-0 z-10 h-1 bg-gradient-to-r from-primary-600 via-gold-500 to-primary-700" aria-hidden />
+              <div className="relative h-72 w-full overflow-hidden rounded-[28px] border border-[#ebe4d6] bg-white shadow-[0_30px_80px_rgba(12,23,38,0.12)] sm:h-96 md:h-120">
+                <span className="absolute inset-x-0 top-0 z-10 h-1 bg-linear-to-r from-primary-600 via-gold-500 to-primary-700" aria-hidden />
                 {program.coverImageUrl ? (
                   <Image
                     src={program.coverImageUrl}
@@ -165,7 +164,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                     className="object-cover"
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center bg-gradient-to-br from-navy-50 to-primary-50/50">
+                  <div className="flex h-full items-center justify-center bg-linear-to-br from-navy-50 to-primary-50/50">
                     <PillarIcon size={64} className="text-primary-300" strokeWidth={1.25} />
                   </div>
                 )}
@@ -173,9 +172,9 @@ export default async function ProgramDetailPage({ params }: PageProps) {
             </AnimatedSection>
 
             <AnimatedSection delay={0.12}>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {program.beneficiariesCount ? (
-                  <div className="rounded-[20px] border border-[#ebe4d6] bg-white/95 p-4 shadow-[0_20px_40px_rgba(15,23,42,0.04)] backdrop-blur-sm">
+                  <div className="rounded-lg border border-navy-100 bg-white p-4 shadow-sm">
                     <p className="font-mono text-[0.625rem] uppercase tracking-wider text-navy-400">
                       Bénéficiaires
                     </p>
@@ -186,26 +185,26 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                   </div>
                 ) : null}
 
-                <div className="rounded-[20px] border border-[#ebe4d6] bg-white/95 p-4 shadow-[0_20px_40px_rgba(15,23,42,0.04)] backdrop-blur-sm">
+                <div className="rounded-lg border border-navy-100 bg-white p-4 shadow-sm">
                   <p className="font-mono text-[0.625rem] uppercase tracking-wider text-navy-400">
-                    Zone d&apos;action
+                    Pilier
                   </p>
                   <p className="font-display mt-1 flex items-center gap-1.5 text-lg font-bold text-navy-900">
-                    <MapPin size={16} className="text-primary-600" />
-                    Guinée
+                    <PillarIcon size={16} className={meta.color} />
+                    {meta.label}
                   </p>
-                  <p className="mt-0.5 text-xs text-navy-500">Conakry &amp; préfectures</p>
+                  <p className="mt-0.5 text-xs text-navy-500">Domaine d&apos;intervention</p>
                 </div>
 
-                <div className="col-span-2 rounded-[20px] border border-[#ebe4d6] bg-white/95 p-4 shadow-[0_20px_40px_rgba(15,23,42,0.04)] backdrop-blur-sm sm:col-span-1">
+                <div className="rounded-lg border border-navy-100 bg-white p-4 shadow-sm">
                   <p className="font-mono text-[0.625rem] uppercase tracking-wider text-navy-400">
-                    Traçabilité
+                    Engagement FSCPE
                   </p>
                   <p className="font-display mt-1 flex items-center gap-1.5 text-lg font-bold text-emerald-700">
                     <CheckCircle2 size={16} />
-                    100% Direct
+                    Paiement direct
                   </p>
-                  <p className="mt-0.5 text-xs text-navy-500">Paiement aux écoles</p>
+                  <p className="mt-0.5 text-xs text-navy-500">Engagement général de la Fondation</p>
                 </div>
               </div>
             </AnimatedSection>
@@ -229,12 +228,12 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                     <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-primary-700" />
                     <div>
                       <h4 className="font-display text-sm font-bold text-navy-900">
-                        Notre garantie de transparence
+                        Engagement général de transparence de la FSCPE
                       </h4>
                       <p className="mt-1 text-xs leading-relaxed text-navy-600 sm:text-sm">
-                        Aucun don n&apos;est distribué sous forme d&apos;espèces. La Fondation règle
-                        directement les établissements scolaires et les fournisseurs partenaires contre
-                        reçus officiels, et assure un suivi assidu des enfants bénéficiaires.
+                        La politique de la Fondation prévoit le règlement direct des établissements
+                        scolaires et fournisseurs partenaires contre reçus officiels, ainsi qu&apos;un suivi
+                        des enfants bénéficiaires. Cet engagement concerne la FSCPE dans son ensemble.
                       </p>
                     </div>
                   </div>
@@ -245,8 +244,8 @@ export default async function ProgramDetailPage({ params }: PageProps) {
 
           <div className="space-y-6 lg:sticky lg:top-24">
             <AnimatedSection delay={0.15}>
-              <div className="relative overflow-hidden rounded-[28px] border border-[#214b6d] bg-gradient-to-br from-[#0d1f2d] via-[#102a3d] to-[#163d59] p-6 text-white shadow-[0_30px_80px_rgba(15,23,42,0.12)] sm:p-7">
-                <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-500 via-gold-500 to-primary-600" aria-hidden />
+              <div className="relative overflow-hidden rounded-[28px] border border-[#214b6d] bg-linear-to-br from-[#0d1f2d] via-[#102a3d] to-[#163d59] p-6 text-white shadow-[0_30px_80px_rgba(15,23,42,0.12)] sm:p-7">
+                <span className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-primary-500 via-gold-500 to-primary-600" aria-hidden />
                 <div aria-hidden className="pointer-events-none absolute -right-14 -top-14 h-44 w-44 rounded-full bg-primary-500/15 blur-3xl" />
                 <div aria-hidden className="pointer-events-none absolute -left-14 -bottom-14 h-44 w-44 rounded-full bg-gold-500/10 blur-3xl" />
 
@@ -259,11 +258,11 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                   </div>
 
                   <h3 className="mt-3 font-display text-2xl font-bold text-white">
-                    Soutenez ce projet
+                    Soutenez la FSCPE
                   </h3>
                   <p className="mt-2 text-xs leading-relaxed text-slate-200 sm:text-sm">
-                    Votre générosité finance immédiatement les kits scolaires, fournitures et frais de
-                    scolarité pour ce programme.
+                    Votre don contribue aux actions de la Fondation en faveur des enfants et des familles
+                    vulnérables en Guinée.
                   </p>
 
                   <div className="mt-6 space-y-3">
@@ -272,7 +271,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                       className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 font-display text-sm font-semibold text-primary-700 shadow-lg shadow-white/10 transition-transform duration-200 hover:-translate-y-0.5 hover:bg-primary-50"
                     >
                       <HeartHandshake size={16} strokeWidth={2} />
-                      Faire un don pour ce projet
+                      Faire un don à la Fondation
                     </Link>
 
                     <Link
@@ -299,7 +298,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
 
             {relatedPrograms.length > 0 && (
               <AnimatedSection delay={0.2}>
-                <div className="rounded-[24px] border border-[#ebe4d6] bg-white/95 p-5 shadow-[0_20px_45px_rgba(15,23,42,0.04)] backdrop-blur-sm sm:p-6">
+                <div className="rounded-3xl border border-[#ebe4d6] bg-white/95 p-5 shadow-[0_20px_45px_rgba(15,23,42,0.04)] backdrop-blur-sm sm:p-6">
                   <p className="font-mono text-xs uppercase tracking-wider text-navy-400">
                     Autres projets
                   </p>
@@ -315,7 +314,7 @@ export default async function ProgramDetailPage({ params }: PageProps) {
                         <Link
                           key={other.id}
                           href={`/programmes/${other.slug}`}
-                          className="group block rounded-[16px] border border-[#edf0f3] p-2.5 transition-colors hover:bg-navy-50"
+                          className="group block rounded-2xl border border-[#edf0f3] p-2.5 transition-colors hover:bg-navy-50"
                         >
                           <span
                             className={cn(

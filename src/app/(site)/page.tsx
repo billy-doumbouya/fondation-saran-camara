@@ -55,14 +55,17 @@ const ACCENT_MAP = {
   primary: {
     bar: "bg-primary-500",
     icon: "bg-primary-50 text-primary-600 group-hover:bg-primary-500 group-hover:text-white",
+    mesh: "text-primary-700",
   },
   navy: {
     bar: "bg-navy-500",
     icon: "bg-navy-50 text-navy-600 group-hover:bg-navy-500 group-hover:text-white",
+    mesh: "text-navy-700",
   },
   gold: {
     bar: "bg-gold-500",
     icon: "bg-gold-50 text-gold-600 group-hover:bg-gold-500 group-hover:text-white",
+    mesh: "text-gold-700",
   },
 } as const;
 
@@ -107,22 +110,25 @@ export default async function HomePage() {
             const Icon = p.icon;
             return (
               <AnimatedSection key={p.title} delay={i * 0.06}>
-                <div className="group relative h-full overflow-hidden hairline bg-white rounded-lg p-6 transition-all duration-300 hover:-translate-y-1 hover:hairline-strong">
-                  <span className={`absolute inset-x-0 top-0 h-0.5 ${accent.bar}`} aria-hidden />
-                  <div
-                    className={`flex h-11 w-11 items-center justify-center rounded-md transition-colors duration-300 ${accent.icon}`}
-                  >
-                    <Icon size={20} strokeWidth={1.75} />
+                <div className="group relative isolate h-full overflow-hidden rounded-lg hairline bg-linear-to-br from-white via-primary-50/20 to-white p-6 transition-all duration-500 ease-out hover:-translate-y-1 hover:hairline-strong hover:shadow-xl motion-reduce:transform-none motion-reduce:transition-none">
+                  <span className={`absolute inset-x-0 top-0 z-20 h-0.5 ${accent.bar}`} aria-hidden />
+                  <PillarMesh className={accent.mesh} />
+                  <div className="relative z-10">
+                    <div
+                      className={`flex h-11 w-11 items-center justify-center rounded-md transition-all duration-500 ease-out group-hover:scale-105 ${accent.icon} motion-reduce:transform-none motion-reduce:transition-none`}
+                    >
+                      <Icon size={20} strokeWidth={1.75} />
+                    </div>
+                    <h3 className="font-display mt-4 text-base font-semibold text-navy-900">
+                      {p.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-navy-600">
+                      {p.text}
+                    </p>
+                    <span className="mt-4 inline-block font-mono text-[0.625rem] uppercase tracking-widest text-navy-400">
+                      0{i + 1} / 04
+                    </span>
                   </div>
-                  <h3 className="font-display mt-4 text-base font-semibold text-navy-900">
-                    {p.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-navy-500">
-                    {p.text}
-                  </p>
-                  <span className="mt-4 inline-block font-mono text-[0.625rem] uppercase tracking-widest text-navy-300">
-                    0{i + 1} / 04
-                  </span>
                 </div>
               </AnimatedSection>
             );
@@ -369,5 +375,27 @@ export default async function HomePage() {
         </div>
       </section>
     </>
+  );
+}
+
+function PillarMesh({ className }: { className: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 420 280"
+      fill="none"
+      className={`pointer-events-none absolute -right-7 -top-5 h-[115%] w-[82%] opacity-[0.12] transition-transform duration-1000 ease-out group-hover:translate-x-1 group-hover:scale-[1.04] group-hover:opacity-[0.2] motion-reduce:transform-none motion-reduce:transition-none ${className}`}
+    >
+      <path d="M184-20c-8 55 63 73 105 92s82 43 103 87 11 86 49 121" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M154-15c-5 61 67 82 113 101s82 44 100 82 16 78 57 116" stroke="currentColor" strokeWidth="1.2" />
+      <path d="M125-12c-1 68 73 91 122 111s81 44 98 78 21 71 64 111" stroke="currentColor" strokeWidth="1" />
+      <path d="M213-23c-14 50 52 65 91 84s83 43 108 92 4 91 39 132" stroke="currentColor" strokeWidth="1" />
+      <path d="M211 24l67 38 69 13 53 57M188 64l72 34 67 12 55 57M165 105l76 30 65 13 56 55M148 149l78 24 65 14 55 48" stroke="currentColor" strokeWidth="0.8" />
+      <path d="M278 62l-18 36-19 37-15 38M347 75l-20 35-19 37-17 39M400 132l-22 35-17 37-15 42" stroke="currentColor" strokeWidth="0.8" />
+      <circle cx="278" cy="62" r="3" fill="currentColor" />
+      <circle cx="327" cy="110" r="2.5" fill="currentColor" />
+      <circle cx="241" cy="135" r="2.5" fill="currentColor" />
+      <circle cx="378" cy="167" r="3" fill="currentColor" />
+    </svg>
   );
 }

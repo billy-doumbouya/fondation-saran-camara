@@ -57,9 +57,9 @@ export default function ProgramsFilter({ programs }: ProgramsFilterProps) {
   return (
     <div className="space-y-8">
       {/* Contrôles de filtrage */}
-      <div className="flex flex-col gap-4 rounded-[20px] border border-[#ebe4d6] bg-white/80 p-3 shadow-[0_16px_35px_rgba(15,23,42,0.04)] backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between sm:p-4">
+      <div className="flex flex-col gap-4 rounded-lg border border-navy-100 bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-4">
         {/* Pills par pilier */}
-        <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-[#edf0f3] bg-[#faf9f5] p-1">
+        <div className="flex flex-wrap items-center gap-1.5">
           {PILLAR_OPTIONS.map((opt) => {
             const count = counts[opt.key] ?? 0;
             const isActive = selectedPillar === opt.key;
@@ -71,8 +71,10 @@ export default function ProgramsFilter({ programs }: ProgramsFilterProps) {
                 type="button"
                 key={opt.key}
                 onClick={() => setSelectedPillar(opt.key)}
+                aria-pressed={isActive}
+                aria-controls="program-results"
                 className={cn(
-                  "relative z-0 inline-flex items-center gap-2 rounded-md border px-3.5 py-2 font-display text-xs font-semibold transition-colors duration-150",
+                  "relative z-0 inline-flex items-center gap-2 rounded-md border px-3.5 py-2 font-display text-xs font-semibold transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2",
                   isActive
                     ? "border-[#102a43] text-white"
                     : "border-[#d7dee5] bg-white text-[#102a43] shadow-sm hover:border-[#102a43] hover:bg-[#eef5f0]",
@@ -115,14 +117,16 @@ export default function ProgramsFilter({ programs }: ProgramsFilterProps) {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            aria-label="Rechercher un programme par nom ou description"
+            aria-controls="program-results"
             placeholder="Rechercher un projet…"
-            className="w-full rounded-xl border border-[#e4e8eb] bg-white py-2.5 pl-9 pr-8 text-xs text-navy-900 placeholder:text-navy-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/10"
+            className="w-full rounded-md border border-navy-200 bg-white py-2.5 pl-9 pr-8 text-xs text-navy-900 placeholder:text-navy-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/10"
           />
           {search && (
             <button
               type="button"
               onClick={() => setSearch("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-navy-400 hover:text-navy-700"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-navy-400 hover:text-navy-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600"
               aria-label="Effacer la recherche"
             >
               <X size={14} />
@@ -131,10 +135,15 @@ export default function ProgramsFilter({ programs }: ProgramsFilterProps) {
         </div>
       </div>
 
+      <p className="sr-only" aria-live="polite">
+        {filtered.length} {filtered.length === 1 ? "programme trouvé" : "programmes trouvés"}
+      </p>
+
       {/* Grille des résultats */}
       {filtered.length > 0 ? (
         <motion.div
           layout
+          id="program-results"
           className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
         >
           <AnimatePresence mode="popLayout">

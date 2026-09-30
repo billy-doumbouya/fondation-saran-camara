@@ -37,13 +37,13 @@ export default function ProgramCard({ program }: { program: Program }) {
   return (
     <Link
       href={`/programmes/${program.slug}`}
-      className="group relative flex h-full flex-col overflow-hidden rounded-[22px] border border-[#ebe4d6] bg-white shadow-[0_18px_45px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-1 hover:border-primary-200 hover:shadow-[0_24px_60px_rgba(15,23,42,0.1)]"
+      className="group relative flex h-full flex-col overflow-hidden rounded-lg border border-navy-100 bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-primary-200 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2"
     >
       {/* Accent top */}
       <span className="absolute inset-x-0 top-0 z-10 h-0.5 bg-gold-500" aria-hidden />
 
       {/* Cover image */}
-      <div className="relative aspect-[16/10] w-full overflow-hidden bg-navy-50">
+      <div className="relative aspect-16/10 w-full overflow-hidden bg-navy-50">
         {program.coverImageUrl ? (
           <Image
             src={program.coverImageUrl}
@@ -53,11 +53,11 @@ export default function ProgramCard({ program }: { program: Program }) {
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-navy-50 to-primary-50/50">
+          <div className="flex h-full items-center justify-center bg-linear-to-br from-navy-50 to-primary-50/50">
             <Icon size={44} className="text-primary-300" strokeWidth={1.5} />
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/25 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       </div>
 
       {/* Content */}
