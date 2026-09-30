@@ -143,71 +143,74 @@ export default async function TeamPage() {
         </div>
       </section>
 
-      {/* Section 4 Piliers de Bonne Gouvernance */}
-      <section className="bg-navy-950 text-white py-20 relative overflow-hidden">
-        {/* Lueur dorée ambiante */}
-        <div className="pointer-events-none absolute -right-20 top-0 h-96 w-96 rounded-full bg-gold-500/10 blur-[100px]" />
-        <div className="pointer-events-none absolute -left-20 bottom-0 h-96 w-96 rounded-full bg-primary-500/10 blur-[100px]" />
-
+      {/* Section 4 Piliers de Bonne Gouvernance - Design lumineux, lisibilité cristalline */}
+      <section className="py-20 sm:py-24 bg-gradient-to-b from-[#fbfaf6] via-navy-50/40 to-white relative overflow-hidden border-t border-navy-100">
         <div className="container-app relative">
           <AnimatedSection>
-            <div className="max-w-2xl">
-              <span className="font-mono text-xs uppercase tracking-widest text-gold-400 font-bold">
-                Transparence &amp; Rigueur Institutionnelle
-              </span>
-              <h2 className="font-display text-3xl font-bold tracking-tight text-white sm:text-4xl mt-3">
+            <div className="max-w-3xl">
+              <div className="flex items-center gap-3">
+                <span className="h-px w-8 bg-gold-500" aria-hidden />
+                <span className="font-mono text-xs font-bold uppercase tracking-widest text-gold-700">
+                  Transparence &amp; Rigueur Institutionnelle
+                </span>
+              </div>
+              <h2 className="font-display text-3xl font-extrabold tracking-tight text-navy-950 sm:text-4xl mt-3">
                 Notre Charte Éthique de Gouvernance
               </h2>
-              <p className="text-sm sm:text-base text-navy-200 mt-3 leading-relaxed">
+              <p className="text-base sm:text-lg text-navy-700 mt-4 leading-relaxed font-normal">
                 Afin de garantir que chaque franc guinéen versé profite directement aux enfants, notre conseil s&apos;astreint aux standards de gouvernance les plus exigeants.
               </p>
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
-              <div className="rounded-xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-sm hover:border-gold-500/40 transition-colors">
-                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-gold-500/10 text-gold-400 mb-5">
-                  <Award size={20} />
+              <div className="group relative rounded-2xl border border-navy-200/80 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-gold-500 hover:shadow-xl">
+                <span className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-gold-500 to-gold-400" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gold-500/10 text-gold-700 mb-5 border border-gold-200">
+                  <Award size={22} className="text-gold-600" />
                 </div>
-                <h3 className="font-display text-base font-bold text-white">
+                <h3 className="font-display text-lg font-bold text-navy-950">
                   Bénévolat Statutaire
                 </h3>
-                <p className="text-xs text-navy-300 mt-2 leading-relaxed">
+                <p className="text-sm text-navy-700 mt-3 leading-relaxed">
                   Tous les membres du bureau et du conseil exercent leurs mandats à titre strictement gracieux, sans rémunération ni jetons de présence.
                 </p>
               </div>
 
-              <div className="rounded-xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-sm hover:border-primary-500/40 transition-colors">
-                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary-500/10 text-primary-400 mb-5">
-                  <Scale size={20} />
+              <div className="group relative rounded-2xl border border-navy-200/80 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary-500 hover:shadow-xl">
+                <span className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-primary-600 to-primary-400" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-50 text-primary-700 mb-5 border border-primary-200">
+                  <Scale size={22} className="text-primary-600" />
                 </div>
-                <h3 className="font-display text-base font-bold text-white">
+                <h3 className="font-display text-lg font-bold text-navy-950">
                   Contrôle &amp; Double Signature
                 </h3>
-                <p className="text-xs text-navy-300 mt-2 leading-relaxed">
+                <p className="text-sm text-navy-700 mt-3 leading-relaxed">
                   Tout engagement financier supérieur au seuil réglementaire exige l&apos;approbation conjointe de la Présidence et de la Trésorerie Générale.
                 </p>
               </div>
 
-              <div className="rounded-xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-sm hover:border-gold-500/40 transition-colors">
-                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-gold-500/10 text-gold-400 mb-5">
-                  <ShieldCheck size={20} />
+              <div className="group relative rounded-2xl border border-navy-200/80 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-gold-500 hover:shadow-xl">
+                <span className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-gold-500 to-gold-400" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gold-500/10 text-gold-700 mb-5 border border-gold-200">
+                  <ShieldCheck size={22} className="text-gold-600" />
                 </div>
-                <h3 className="font-display text-base font-bold text-white">
+                <h3 className="font-display text-lg font-bold text-navy-950">
                   Audit Annuel Public
                 </h3>
-                <p className="text-xs text-navy-300 mt-2 leading-relaxed">
+                <p className="text-sm text-navy-700 mt-3 leading-relaxed">
                   Publication intégrale de nos comptes de résultat et rapports d&apos;activités certifiés pour assurer une transparence sans faille auprès des donateurs.
                 </p>
               </div>
 
-              <div className="rounded-xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur-sm hover:border-primary-500/40 transition-colors">
-                <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary-500/10 text-primary-400 mb-5">
-                  <HeartHandshake size={20} />
+              <div className="group relative rounded-2xl border border-navy-200/80 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary-500 hover:shadow-xl">
+                <span className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-primary-600 to-primary-400" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-50 text-primary-700 mb-5 border border-primary-200">
+                  <HeartHandshake size={22} className="text-primary-600" />
                 </div>
-                <h3 className="font-display text-base font-bold text-white">
+                <h3 className="font-display text-lg font-bold text-navy-950">
                   Ancrage Communautaire
                 </h3>
-                <p className="text-xs text-navy-300 mt-2 leading-relaxed">
+                <p className="text-sm text-navy-700 mt-3 leading-relaxed">
                   Implication continue des relais de quartiers, chefs traditionnels et mères de famille pour adapter chaque action aux réalités locales.
                 </p>
               </div>
@@ -230,7 +233,7 @@ export default async function TeamPage() {
               <h2 className="font-display text-3xl sm:text-4xl font-extrabold tracking-tight mt-3 text-white">
                 Vous souhaitez apporter votre expertise à la Fondation ?
               </h2>
-              <p className="mt-4 text-sm sm:text-base text-navy-200 leading-relaxed">
+              <p className="mt-4 text-sm sm:text-base text-slate-100 leading-relaxed font-normal">
                 Médecins, éducateurs, juristes, informaticiens ou communicants : la Fondation Saran Camara accueille les femmes et hommes désireux de consacrer un peu de leur temps à l&apos;émancipation des orphelins de Guinée.
               </p>
 
@@ -243,7 +246,7 @@ export default async function TeamPage() {
                   <ArrowRight size={15} />
                 </Link>
 
-                <div className="flex items-center gap-2 text-xs text-navy-300 font-medium">
+                <div className="flex items-center gap-2 text-xs text-emerald-200 font-medium">
                   <CheckCircle size={15} className="text-emerald-400" />
                   <span>Missions ponctuelles ou régulières adaptées à votre emploi du temps</span>
                 </div>
