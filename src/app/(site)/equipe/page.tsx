@@ -109,7 +109,7 @@ export default async function TeamPage() {
       </section>
 
       {/* Corps Principal : Organigramme Interactif Vivant & Annuaire */}
-      <section className="relative overflow-hidden py-16 sm:py-24">
+      <section className="relative overflow-x-clip py-16 sm:py-24">
         {/* Fond texturé subtil */}
         <div
           aria-hidden

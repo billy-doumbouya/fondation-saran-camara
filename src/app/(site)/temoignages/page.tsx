@@ -33,12 +33,14 @@ export default async function TestimonialsPage() {
                 <span className="eyebrow eyebrow-light">Témoignages</span>
               </div>
 
-              <h1 className="mt-5 max-w-2xl font-display text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-5xl md:text-6xl">
+              <h1 className="mt-5 max-w-2xl break-words font-display text-[clamp(1.75rem,9vw,2.25rem)] font-bold leading-[1.1] tracking-tight text-white sm:text-5xl md:text-6xl">
                 Ce que disent nos partenaires et bénéficiaires
               </h1>
 
               <p className="mt-5 max-w-xl text-base font-light leading-relaxed text-slate-200 sm:text-lg">
-                Découvrez les histoires touchantes, les retours d&apos;expérience et l&apos;impact direct de nos actions à travers leurs voix.
+                Découvrez les histoires touchantes, les retours
+                d&apos;expérience et l&apos;impact direct de nos actions à
+                travers leurs voix.
               </p>
 
               <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -57,8 +59,8 @@ export default async function TestimonialsPage() {
           <>
             {/* Count */}
             <AnimatedSection>
-              <div className="flex items-center justify-between hairline-b pb-4">
-                <div>
+              <div className="flex items-center justify-between gap-3 hairline-b pb-4">
+                <div className="min-w-0">
                   <div className="flex items-center gap-3">
                     <span className="h-px w-8 bg-gold-500/60" aria-hidden />
                     <span className="eyebrow">Récits</span>
@@ -68,13 +70,14 @@ export default async function TestimonialsPage() {
                   </h2>
                 </div>
                 <span className="font-mono text-xs uppercase tracking-widest text-navy-400 shrink-0">
-                  {testimonials.length} témoignage{testimonials.length > 1 ? "s" : ""}
+                  {testimonials.length} témoignage
+                  {testimonials.length > 1 ? "s" : ""}
                 </span>
               </div>
             </AnimatedSection>
 
             {/* Grid */}
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {testimonials.map((t, i) => (
                 <AnimatedSection key={t.id} delay={i * 0.05}>
                   <TestimonialCard testimonial={t} />
@@ -88,28 +91,44 @@ export default async function TestimonialsPage() {
 
         {/* ——— CTA ——— */}
         <AnimatedSection className="mt-16" delay={0.1}>
-          <div className="relative overflow-hidden rounded-[28px] border border-[#214b6d] bg-gradient-to-br from-[#0d1f2d] via-[#102a3d] to-[#153d59] p-8 text-white shadow-[0_30px_80px_rgba(15,23,42,0.18)] sm:p-10">
-            <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-primary-500/15 blur-3xl" />
-            <div aria-hidden className="pointer-events-none absolute -left-12 -bottom-12 h-52 w-52 rounded-full bg-gold-500/10 blur-3xl" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(47,153,80,0.12),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(212,160,23,0.16),transparent_35%)]" aria-hidden />
-            <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-500 via-gold-500 to-primary-700" aria-hidden />
+          <div className="relative overflow-hidden rounded-[28px] border border-[#214b6d] bg-gradient-to-br from-[#0d1f2d] via-[#102a3d] to-[#153d59] p-5 text-white shadow-[0_30px_80px_rgba(15,23,42,0.18)] sm:p-10">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-primary-500/15 blur-3xl"
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -left-12 -bottom-12 h-52 w-52 rounded-full bg-gold-500/10 blur-3xl"
+            />
+            <div
+              className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(47,153,80,0.12),transparent_30%),radial-gradient(circle_at_bottom_right,rgba(212,160,23,0.16),transparent_35%)]"
+              aria-hidden
+            />
+            <span
+              className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary-500 via-gold-500 to-primary-700"
+              aria-hidden
+            />
 
             <div className="relative z-10 flex flex-col items-center justify-between gap-6 text-center lg:flex-row lg:text-left">
               <div className="max-w-2xl">
                 <div className="flex items-center gap-3">
                   <span className="h-px w-8 bg-gold-400/60" aria-hidden />
-                  <span className="eyebrow eyebrow-light">Votre voix compte</span>
+                  <span className="eyebrow eyebrow-light">
+                    Votre voix compte
+                  </span>
                 </div>
-                <h3 className="font-display mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                  Vous avez bénéficié de nos programmes ou collaboré avec nous&nbsp;?
+                <h3 className="mt-3 break-words font-display text-xl font-bold tracking-tight text-white sm:text-3xl">
+                  Vous avez bénéficié de nos programmes ou collaboré avec
+                  nous&nbsp;?
                 </h3>
                 <p className="mt-2 text-sm leading-relaxed text-slate-200">
-                  Partagez votre expérience et aidez-nous à inspirer davantage de bienfaiteurs et de partenaires.
+                  Partagez votre expérience et aidez-nous à inspirer davantage
+                  de bienfaiteurs et de partenaires.
                 </p>
               </div>
               <Link
                 href="/contact?subject=Proposition%20de%20témoignage"
-                className="shrink-0 inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3.5 font-display text-sm font-semibold text-primary-700 shadow-lg shadow-white/10 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary-50"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-3.5 py-3 font-display text-sm font-semibold text-primary-700 shadow-lg shadow-white/10 transition-all duration-200 hover:-translate-y-0.5 hover:bg-primary-50 sm:px-4 lg:w-auto lg:shrink-0"
               >
                 <HeartHandshake size={16} strokeWidth={2} />
                 Laisser un témoignage
@@ -128,13 +147,18 @@ function EmptyState() {
     <AnimatedSection direction="fade">
       <div className="mx-auto max-w-md text-center">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-md hairline bg-white">
-          <MessageSquareQuote size={24} className="text-navy-300" strokeWidth={1.5} />
+          <MessageSquareQuote
+            size={24}
+            className="text-navy-300"
+            strokeWidth={1.5}
+          />
         </div>
         <h3 className="font-display mt-5 text-lg font-semibold text-navy-900">
           Aucun témoignage pour le moment
         </h3>
         <p className="mt-2 text-sm text-navy-500">
-          Les retours d&apos;expérience de nos bénéficiaires et partenaires seront bientôt publiés ici.
+          Les retours d&apos;expérience de nos bénéficiaires et partenaires
+          seront bientôt publiés ici.
         </p>
       </div>
     </AnimatedSection>

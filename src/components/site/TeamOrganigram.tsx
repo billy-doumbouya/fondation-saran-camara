@@ -239,7 +239,8 @@ export default function TeamOrganigram({ members }: TeamOrganigramProps) {
           {/* Conteneur défilable tactile pour mobile, plein format centré sur grand écran */}
           <div
             ref={containerRef}
-            className="relative overflow-x-auto pb-8 touch-pan-x scrollbar-thin cursor-grab active:cursor-grabbing rounded-2xl"
+            className="relative max-w-full overflow-x-auto overflow-y-visible pb-8 touch-pan-x overscroll-x-contain scrollbar-thin cursor-grab active:cursor-grabbing rounded-2xl"
+            style={{ WebkitOverflowScrolling: "touch" }}
           >
             <div className="min-w-[960px] lg:min-w-0 w-full relative py-6">
             {/* Sommet : La Fondatrice & Présidence */}

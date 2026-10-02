@@ -25,14 +25,16 @@ export default function Navbar() {
   }, []);
 
   // — Lock body scroll when mobile menu open —
-  useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = "";
-      };
-    }
-  }, [mobileOpen]);
+// — Lock page scroll when mobile menu open —
+useEffect(() => {
+  if (!mobileOpen) return;
+  const html = document.documentElement;
+  const previous = html.style.overflow;
+  html.style.overflow = "hidden";
+  return () => {
+    html.style.overflow = previous;
+  };
+}, [mobileOpen]);
 
   const isLinkActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -52,12 +54,16 @@ export default function Navbar() {
 
         <nav
           className={cn(
-            "container-app flex items-center justify-between transition-all duration-300",
+            "container-app gap-3 flex items-center justify-between transition-all duration-300",
             scrolled ? "h-14" : "h-16 md:h-20",
           )}
         >
           {/* — Logo — */}
-          <Link href="/" aria-label="Accueil — FSCPE" className="shrink-0">
+          <Link
+            href="/"
+            aria-label="Accueil — FSCPE"
+            className="min-w-0 flex-1 lg:flex-none"
+          >
             <Logo enableAdminTrigger />
           </Link>
 
@@ -72,9 +78,7 @@ export default function Navbar() {
                   onMouseEnter={() =>
                     link.children && setOpenDropdown(link.label)
                   }
-                  onMouseLeave={() =>
-                    link.children && setOpenDropdown(null)
-                  }
+                  onMouseLeave={() => link.children && setOpenDropdown(null)}
                 >
                   <Link
                     href={link.href}
@@ -118,9 +122,7 @@ export default function Navbar() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={reduce ? { opacity: 0 } : { opacity: 0, y: 8 }}
                         transition={{ duration: 0.18, ease: "easeOut" }}
-                        className={cn(
-                          "absolute left-0 top-full pt-2 w-72",
-                        )}
+                        className={cn("absolute left-0 top-full pt-2 w-72")}
                       >
                         <div className="overflow-hidden rounded-md hairline bg-white shadow-xl shadow-navy-900/5">
                           <span
@@ -199,9 +201,7 @@ export default function Navbar() {
               <motion.span
                 className="absolute left-0 top-0 h-0.5 w-full bg-navy-800"
                 animate={
-                  mobileOpen
-                    ? { rotate: 45, y: 7 }
-                    : { rotate: 0, y: 0 }
+                  mobileOpen ? { rotate: 45, y: 7 } : { rotate: 0, y: 0 }
                 }
                 transition={{ duration: 0.25, ease: "easeInOut" }}
               />
@@ -213,9 +213,7 @@ export default function Navbar() {
               <motion.span
                 className="absolute bottom-0 left-0 h-0.5 w-full bg-navy-800"
                 animate={
-                  mobileOpen
-                    ? { rotate: -45, y: -7 }
-                    : { rotate: 0, y: 0 }
+                  mobileOpen ? { rotate: -45, y: -7 } : { rotate: 0, y: 0 }
                 }
                 transition={{ duration: 0.25, ease: "easeInOut" }}
               />

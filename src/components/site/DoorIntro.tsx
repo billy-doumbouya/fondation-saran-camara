@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { Sparkles, X } from "lucide-react";
 
@@ -48,6 +48,8 @@ export default function DoorIntro() {
     () => false
   );
 
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const hasPlayedDoorSoundRef = useRef(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
 
@@ -69,6 +71,80 @@ export default function DoorIntro() {
       clearTimeout(tDismiss);
     };
   }, [initialDismissed, reduce]);
+
+  useEffect(() => {
+    if (!isOpen || initialDismissed || reduce || hasPlayedDoorSoundRef.current) return;
+
+    hasPlayedDoorSoundRef.current = true;
+
+    if (typeof window === "undefined") return;
+
+    const AudioCtor = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtor) return;
+
+    const context = new AudioCtor();
+    audioContextRef.current = context;
+    const now = context.currentTime;
+    const master = context.createGain();
+    master.gain.value = 0.0001;
+    master.connect(context.destination);
+
+    const creakOsc = context.createOscillator();
+    creakOsc.type = "sawtooth";
+    creakOsc.frequency.setValueAtTime(180, now);
+    creakOsc.frequency.exponentialRampToValueAtTime(60, now + 1.2);
+
+    const creakGain = context.createGain();
+    creakGain.gain.setValueAtTime(0.0001, now);
+    creakGain.gain.exponentialRampToValueAtTime(0.11, now + 0.12);
+    creakGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+
+    creakOsc.connect(creakGain);
+    creakGain.connect(master);
+    creakOsc.start(now);
+    creakOsc.stop(now + 1.2);
+
+    const duration = 1.2;
+    const buffer = context.createBuffer(1, Math.floor(context.sampleRate * duration), context.sampleRate);
+    const channel = buffer.getChannelData(0);
+    for (let i = 0; i < channel.length; i += 1) {
+      const t = i / channel.length;
+      const sweep = 1 - t;
+      const noise = (Math.random() * 2 - 1) * (0.5 + sweep * 0.8);
+      channel[i] = noise * (0.12 + (1 - t) * 0.18);
+    }
+
+    const noiseSource = context.createBufferSource();
+    noiseSource.buffer = buffer;
+
+    const noiseGain = context.createGain();
+    noiseGain.gain.setValueAtTime(0.0001, now);
+    noiseGain.gain.linearRampToValueAtTime(0.06, now + 0.05);
+    noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.0);
+
+    noiseSource.connect(noiseGain);
+    noiseGain.connect(master);
+    noiseSource.start(now);
+    noiseSource.stop(now + duration);
+
+    master.gain.linearRampToValueAtTime(0.18, now + 0.04);
+    master.gain.exponentialRampToValueAtTime(0.0001, now + 1.4);
+
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        await context.close();
+      } catch {
+        // Fermer proprement si le contexte est déjà fermé.
+      }
+    }, 1500);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      if (audioContextRef.current) {
+        void audioContextRef.current.close().catch(() => undefined);
+      }
+    };
+  }, [isOpen, initialDismissed, reduce]);
 
   if (!isMounted || initialDismissed || isDismissed) return null;
 
@@ -119,7 +195,7 @@ export default function DoorIntro() {
 
           {/* Battant Gauche */}
           <motion.div
-            className="relative h-full w-1/2 overflow-hidden border-r border-gold-500/40 bg-navy-900 shadow-2xl"
+            className="absolute inset-y-0 left-0 w-[49.9%] overflow-hidden border-r border-gold-500/40 bg-navy-900 shadow-2xl"
             style={{
               transformOrigin: "left center",
               transformStyle: "preserve-3d",
@@ -142,29 +218,31 @@ export default function DoorIntro() {
             <div className="absolute inset-y-0 right-0 w-1 bg-gradient-to-b from-transparent via-gold-400 to-transparent opacity-80" />
 
             {/* Texte & Monogramme gauche */}
-            <div className="absolute inset-y-0 right-8 flex flex-col items-end justify-center text-right sm:right-16">
-              <span className="font-mono text-[0.6875rem] uppercase tracking-[0.3em] text-gold-400/90">
-                Fondation Humanitaire
-              </span>
-              <span className="font-display text-4xl font-extrabold tracking-tight text-white sm:text-6xl md:text-7xl">
-                FSCPE
-              </span>
-              <span className="mt-1 font-mono text-[0.625rem] uppercase tracking-widest text-white/50">
-                Guinée · Conakry
-              </span>
+            <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-end px-3 sm:px-6">
+              <div className="mx-auto w-[60%] max-w-[220px] text-right max-[380px]:w-[70%]">
+                <span className="block font-mono text-[0.6875rem] uppercase tracking-[0.3em] text-gold-400/90 max-[380px]:text-[0.56rem] max-[380px]:tracking-[0.18em]">
+                  Fondation Humanitaire
+                </span>
+                <span className="mt-1 block font-display text-4xl font-extrabold tracking-tight text-white sm:text-6xl md:text-7xl max-[380px]:text-3xl">
+                  FSCPE
+                </span>
+                <span className="mt-1 block font-mono text-[0.625rem] uppercase tracking-widest text-white/50 max-[380px]:text-[0.5rem]">
+                  Guinée · Conakry
+                </span>
+              </div>
             </div>
 
             {/* Demi-sceau central doré */}
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2">
-              <div className="flex h-28 w-28 items-center justify-center rounded-full border-2 border-gold-400/60 bg-navy-950 shadow-2xl backdrop-blur-md sm:h-36 sm:w-36">
-                <Sparkles className="h-6 w-6 text-gold-400" />
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+              <div className="flex h-28 w-28 items-center justify-center rounded-full border-2 border-gold-400/60 bg-navy-950 shadow-2xl backdrop-blur-md sm:h-36 sm:w-36 max-[380px]:h-20 max-[380px]:w-20">
+                <Sparkles className="h-6 w-6 text-gold-400 max-[380px]:h-4 max-[380px]:w-4" />
               </div>
             </div>
           </motion.div>
 
           {/* Battant Droit */}
           <motion.div
-            className="relative h-full w-1/2 overflow-hidden border-l border-gold-500/40 bg-navy-900 shadow-2xl"
+            className="absolute inset-y-0 right-0 w-[49.9%] overflow-hidden border-l border-gold-500/40 bg-navy-900 shadow-2xl"
             style={{
               transformOrigin: "right center",
               transformStyle: "preserve-3d",
@@ -187,23 +265,25 @@ export default function DoorIntro() {
             <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-transparent via-gold-400 to-transparent opacity-80" />
 
             {/* Texte & Devise droite */}
-            <div className="absolute inset-y-0 left-8 flex flex-col items-start justify-center text-left sm:left-16">
-              <span className="font-mono text-[0.6875rem] uppercase tracking-[0.3em] text-primary-400">
-                Protection de l&apos;Enfance
-              </span>
-              <span className="font-display text-xl font-bold tracking-tight text-white/90 sm:text-2xl md:text-3xl max-w-xs">
-                Saran Camara
-              </span>
-              <p className="mt-2 max-w-xs text-xs font-light leading-relaxed text-white/60 sm:text-sm">
-                Un avenir digne pour chaque orphelin et enfant vulnérable.
-              </p>
+            <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-start px-3 sm:px-6">
+              <div className="mx-auto w-[60%] max-w-[220px] text-left max-[380px]:w-[70%]">
+                <span className="block font-mono text-[0.6875rem] uppercase tracking-[0.3em] text-primary-400 max-[380px]:text-[0.5rem] max-[380px]:tracking-[0.18em]">
+                  Protection de l&apos;Enfance
+                </span>
+                <span className="mt-1 block font-display text-xl font-bold tracking-tight text-white/90 sm:text-2xl md:text-3xl max-[380px]:text-base">
+                  Saran Camara
+                </span>
+                <p className="mt-2 text-xs font-light leading-relaxed text-white/60 sm:text-sm max-[380px]:mt-1 max-[380px]:text-[0.6rem] max-[380px]:leading-snug">
+                  Un avenir digne pour chaque orphelin et enfant vulnérable.
+                </p>
+              </div>
             </div>
 
             {/* Demi-sceau central droit */}
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2">
-              <div className="flex h-28 w-28 items-center justify-center rounded-full border-2 border-gold-400/60 bg-navy-950 shadow-2xl backdrop-blur-md sm:h-36 sm:w-36">
-                <span className="font-display text-sm font-bold tracking-widest text-gold-300">
-                  EST. 2024
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+              <div className="flex h-28 w-28 items-center justify-center rounded-full border-2 border-gold-400/60 bg-navy-950 shadow-2xl backdrop-blur-md sm:h-36 sm:w-36 max-[380px]:h-20 max-[380px]:w-20">
+                <span className="font-display text-sm font-bold tracking-widest text-gold-300 max-[380px]:text-[0.55rem] max-[380px]:tracking-[0.15em]">
+                  EST. 2026
                 </span>
               </div>
             </div>

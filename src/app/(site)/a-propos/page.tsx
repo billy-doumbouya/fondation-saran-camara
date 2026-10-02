@@ -409,7 +409,7 @@ export default async function AboutPage() {
       {/* ========================================================
           7. BANNIÈRE D'ENGAGEMENT "À NOS CÔTÉS"
           ======================================================== */}
-      <section className="relative overflow-hidden bg-navy-950 py-16 text-white sm:py-20">
+      <section className="relative overflow-hidden bg-[#0b172a] py-16 text-white sm:py-20">
         <div className="pointer-events-none absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-primary-600/20 blur-3xl" />
         <div className="pointer-events-none absolute -top-24 -left-24 h-96 w-96 rounded-full bg-gold-500/20 blur-3xl" />
 
@@ -420,7 +420,7 @@ export default async function AboutPage() {
                 <Sparkles size={14} />
                 Rejoignez le mouvement
               </span>
-              <h2 className="font-display mt-3 text-3xl font-extrabold leading-tight sm:text-4xl lg:text-5xl">
+              <h2 className="font-display mt-3 text-3xl font-extrabold leading-tight text-white sm:text-4xl lg:text-5xl">
                 Chaque geste peut ouvrir une nouvelle voie.
               </h2>
               <p className="mt-4 text-base leading-relaxed text-navy-200">
