@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { donationsRepo } from "@/lib/db/repo";
+import { donationsRepo, PENDING_DONATION_TTL_MS } from "@/lib/db/repo";
 import { getGeniusPayPayment } from "@/lib/geniuspay";
 
 export const runtime = "nodejs";
@@ -41,6 +41,13 @@ export async function GET(
 
     if (normalized !== "pending" && donation?.status === "pending") {
       await donationsRepo.updateStatus(reference, normalized, { providerData: remote.raw });
+    } else if (
+      normalized === "pending" &&
+      donation?.status === "pending" &&
+      Date.now() - donation.createdAt.getTime() >= PENDING_DONATION_TTL_MS
+    ) {
+      await donationsRepo.updateStatus(reference, "failed", { providerData: remote.raw });
+      return NextResponse.json({ reference, status: "failed" });
     }
 
     return NextResponse.json({ reference, status: normalized });

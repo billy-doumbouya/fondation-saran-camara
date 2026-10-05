@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { sql } from "drizzle-orm";
 import { isAuthenticated } from "@/lib/auth";
+import { db } from "@/lib/db";
 import {
   contactRepo,
   eventsRepo,
@@ -10,13 +12,18 @@ import {
 } from "@/lib/db/repo";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET() {
+  let databaseConnected = false;
   try {
     const authed = await isAuthenticated();
     if (!authed) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
+
+    await db.execute(sql`select 1`);
+    databaseConnected = true;
 
     const [
       pendingMessages,
@@ -126,11 +133,12 @@ export async function GET() {
       items,
       count: items.length,
       totalCount,
+      databaseConnected,
     });
   } catch (error) {
     console.error("Admin notifications load failed", error);
     return NextResponse.json(
-      { error: "Erreur lors du chargement des notifications" },
+      { error: "Erreur lors du chargement des notifications", databaseConnected },
       { status: 500 }
     );
   }

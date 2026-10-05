@@ -1,4 +1,4 @@
-import { desc, eq, asc, like, inArray } from "drizzle-orm";
+import { desc, eq, asc, like, inArray, and, lt } from "drizzle-orm";
 import { db } from "./index";
 import {
   news,
@@ -252,11 +252,29 @@ export const contactRepo = {
       .update(contactMessages)
       .set({ isRead: true })
       .where(eq(contactMessages.id, id)),
+  remove: (id: number) =>
+    db
+      .delete(contactMessages)
+      .where(eq(contactMessages.id, id))
+      .returning({ id: contactMessages.id }),
 };
 
 /* -------------------------- DONATIONS -------------------------- */
 /* -------------------------- DONATIONS -------------------------- */
+export const PENDING_DONATION_TTL_MS = 30 * 60 * 1000;
+
 export const donationsRepo = {
+  expireStalePending: () =>
+    db
+      .update(donations)
+      .set({ status: "failed", updatedAt: new Date() })
+      .where(
+        and(
+          eq(donations.status, "pending"),
+          lt(donations.createdAt, new Date(Date.now() - PENDING_DONATION_TTL_MS))
+        )
+      )
+      .returning({ id: donations.id }),
   create: (data: typeof donations.$inferInsert) =>
     db.insert(donations).values(data).returning(),
   updateStatus: (reference: string, status: string, payload?: unknown) =>
@@ -272,7 +290,10 @@ export const donationsRepo = {
       .where(eq(donations.reference, reference))
       .limit(1)
       .then((r) => r[0]),
-  listAll: () => db.select().from(donations).orderBy(desc(donations.createdAt)),
+  listAll: async () => {
+    await donationsRepo.expireStalePending();
+    return db.select().from(donations).orderBy(desc(donations.createdAt));
+  },
 };
 /* -------------------------- SETTINGS -------------------------- */
 export const settingsRepo = {

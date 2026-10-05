@@ -1,6 +1,7 @@
 import { desc } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { donations } from "@/lib/db/schema";
+import { donationsRepo } from "@/lib/db/repo";
 import AdminStatCard from "@/components/admin/ui/AdminStatCard";
 import DonationsTable, { type DonationRow } from "@/components/admin/DonationsTable";
 import { HeartHandshake, CreditCard, CheckCircle2, Clock } from "lucide-react";
@@ -13,6 +14,7 @@ export const metadata = {
 export default async function AdminDonationsPage() {
   let rows: DonationRow[] = [];
   try {
+    await donationsRepo.expireStalePending();
     const donationRows = await db
       .select({
         id: donations.id,
@@ -68,7 +70,7 @@ export default async function AdminDonationsPage() {
           value={formatGNF(totalAmountGNF)}
           icon={<HeartHandshake size={22} />}
           accent="primary"
-          trend={{ value: "+18.2%", isPositive: true, label: "ce mois" }}
+          description="Cumul des paiements confirmés"
         />
         <AdminStatCard
           label="Dons confirmés"

@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import {
   ArrowUpRight,
+  AlertCircle,
   Bell,
   CircleHelp,
   ShieldCheck,
@@ -88,6 +89,8 @@ export default function ProtectedAdminHeader() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [totalNotificationCount, setTotalNotificationCount] = useState(0);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
+  const [notificationError, setNotificationError] = useState<string | null>(null);
+  const [databaseConnected, setDatabaseConnected] = useState<boolean | null>(null);
 
   const notifRef = useRef<HTMLDivElement>(null);
   const helpRef = useRef<HTMLDivElement>(null);
@@ -97,14 +100,27 @@ export default function ProtectedAdminHeader() {
     try {
       setLoadingNotifications(true);
       const res = await fetch("/api/admin/notifications", { cache: "no-store" });
+      const data = await res.json().catch(() => null);
+      if (typeof data?.databaseConnected === "boolean") {
+        setDatabaseConnected(data.databaseConnected);
+      }
       if (res.ok) {
-        const data = await res.json();
         const items = Array.isArray(data.items) ? data.items : [];
         setNotifications(items);
         setTotalNotificationCount(data.totalCount || items.length);
+        setNotificationError(null);
+      } else {
+        setNotifications([]);
+        setTotalNotificationCount(0);
+        setNotificationError(data?.error || "Impossible de charger les notifications.");
       }
-    } catch {
-      // Ignorer silencieusement si hors-ligne
+    } catch (error) {
+      setNotifications([]);
+      setTotalNotificationCount(0);
+      setDatabaseConnected(null);
+      setNotificationError(
+        error instanceof Error ? error.message : "Impossible de charger les notifications."
+      );
     } finally {
       setLoadingNotifications(false);
     }
@@ -115,6 +131,14 @@ export default function ProtectedAdminHeader() {
     loadNotifications();
     const interval = setInterval(loadNotifications, 90000);
     return () => clearInterval(interval);
+  }, [loadNotifications]);
+
+  useEffect(() => {
+    const handleNotificationRefresh = () => {
+      void loadNotifications();
+    };
+    window.addEventListener("admin-notifications-refresh", handleNotificationRefresh);
+    return () => window.removeEventListener("admin-notifications-refresh", handleNotificationRefresh);
   }, [loadNotifications]);
 
   // Fermeture automatique lors du changement de route (navigation)
@@ -160,14 +184,14 @@ export default function ProtectedAdminHeader() {
     <>
       <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/90 px-4 backdrop-blur-md sm:px-8 lg:px-10">
         {/* Titre & Fil d'Ariane de la section */}
-        <div className="pl-12 lg:pl-0 flex items-center gap-3">
+        <div className="min-w-0 flex-1 pl-12 lg:pl-0 flex items-center gap-3">
           <div>
             <div className="flex items-center gap-2">
               <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-primary-700">
                 {currentBreadcrumb.category}
               </span>
               <span className="text-slate-300 text-xs">/</span>
-              <h2 className="font-display text-sm font-bold text-navy-950 sm:text-base">
+              <h2 className="truncate font-display text-sm font-bold text-navy-950 sm:text-base">
                 {currentBreadcrumb.title}
               </h2>
             </div>
@@ -175,7 +199,7 @@ export default function ProtectedAdminHeader() {
         </div>
 
         {/* Centre / Droite : Command Palette + Status + Actions */}
-        <div className="flex items-center gap-2 sm:gap-3 text-slate-600">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3 text-slate-600">
           {/* Bouton de recherche globale Command Palette (Ctrl+K) */}
           <button
             type="button"
@@ -192,13 +216,39 @@ export default function ProtectedAdminHeader() {
             </kbd>
           </button>
 
-          {/* Indicateur de connectivité Neon Database */}
-          <div className="hidden lg:flex items-center gap-2 rounded-full border border-emerald-200/80 bg-emerald-50/70 px-2.5 py-1 text-[11px] font-medium text-emerald-800">
+          {/* Indicateur d'état Neon Database */}
+          <div
+            role="status"
+            aria-live="polite"
+            className={`hidden lg:flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-medium ${
+              databaseConnected === true
+                ? "border-emerald-200/80 bg-emerald-50/70 text-emerald-800"
+                : databaseConnected === false
+                ? "border-rose-200 bg-rose-50 text-rose-800"
+                : "border-slate-200 bg-slate-50 text-slate-600"
+            }`}
+          >
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              {databaseConnected === null && (
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-slate-400 opacity-75" />
+              )}
+              <span
+                className={`relative inline-flex h-2 w-2 rounded-full ${
+                  databaseConnected === true
+                    ? "bg-emerald-500"
+                    : databaseConnected === false
+                    ? "bg-rose-500"
+                    : "bg-slate-400"
+                }`}
+              />
             </span>
-            <span className="font-mono text-[10px]">Neon DB Sync</span>
+            <span className="font-mono text-[10px]">
+              {databaseConnected === true
+                ? "Neon connecté"
+                : databaseConnected === false
+                ? "Neon indisponible"
+                : "Vérification Neon"}
+            </span>
           </div>
 
           <span className="hidden h-5 w-px bg-slate-200 sm:block" />
@@ -224,12 +274,14 @@ export default function ProtectedAdminHeader() {
           <button
             type="button"
             aria-label="Notifications administrateur"
+            aria-expanded={notificationsOpen}
+            aria-controls="admin-notifications-panel"
             onClick={() => {
               setHelpOpen(false);
               setNotificationsOpen((prev) => !prev);
               if (!notificationsOpen) loadNotifications();
             }}
-            className={`relative rounded-xl p-2 transition-colors ${
+            className={`relative shrink-0 rounded-xl p-2 transition-colors ${
               notificationsOpen
                 ? "bg-primary-50 text-primary-700"
                 : "text-slate-500 hover:bg-slate-100 hover:text-navy-900"
@@ -355,6 +407,9 @@ export default function ProtectedAdminHeader() {
 
             <motion.aside
               ref={notifRef}
+              id="admin-notifications-panel"
+              role="dialog"
+              aria-label="Notifications administrateur"
               initial={{ opacity: 0, y: -10, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.98 }}
@@ -395,15 +450,15 @@ export default function ProtectedAdminHeader() {
                 )}
 
                 {!loadingNotifications && notifications.length === 0 && (
-                  <div className="rounded-2xl border border-slate-100 bg-emerald-50/40 p-6 text-center">
-                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 mb-2">
-                      <ShieldCheck size={20} />
+                  <div className={`rounded-2xl border p-6 text-center ${notificationError ? "border-rose-100 bg-rose-50/60" : "border-slate-100 bg-emerald-50/40"}`}>
+                    <div className={`mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full ${notificationError ? "bg-rose-100 text-rose-600" : "bg-emerald-100 text-emerald-600"}`}>
+                      {notificationError ? <AlertCircle size={20} /> : <ShieldCheck size={20} />}
                     </div>
-                    <p className="text-xs font-semibold text-emerald-900">
-                      Tout est à jour !
+                    <p className={`text-xs font-semibold ${notificationError ? "text-rose-900" : "text-emerald-900"}`}>
+                      {notificationError ? "Notifications indisponibles" : "Tout est à jour !"}
                     </p>
                     <p className="text-[11px] text-slate-500 mt-0.5">
-                      Aucun message non lu ou action requise pour le moment.
+                      {notificationError || "Aucun message non lu ou action requise pour le moment."}
                     </p>
                   </div>
                 )}

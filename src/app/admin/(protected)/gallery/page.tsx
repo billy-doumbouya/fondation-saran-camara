@@ -201,7 +201,7 @@ export default function AdminGalleryPage() {
         onClose={() => setModalOpen(false)}
         title={editing ? "Modifier la photo" : "Ajouter une photo à la galerie"}
         badge="Médiathèque FSCPE"
-        description="Chargez ou ajustez une image de terrain (Appareil, URL web, Google Drive, Dropbox ou Caméra)."
+        description="Chargez ou ajustez une image de terrain (Appareil, Google Drive, Dropbox ou Caméra)."
         size="lg"
       >
         <div className="space-y-5">

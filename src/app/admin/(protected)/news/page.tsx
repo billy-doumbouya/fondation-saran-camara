@@ -272,7 +272,7 @@ export default function AdminNewsPage() {
           <div>
             <ImageUploader
               label="Image de couverture de l'article"
-              description="Affiche principale de l'article (Local, URL web, Google Drive, Dropbox)."
+              description="Affiche principale de l'article (Local, Google Drive, Dropbox)."
               value={coverImageUrl ? { url: coverImageUrl, publicId: coverImagePublicId ?? undefined } : null}
               onChange={(v) => {
                 setValue("coverImageUrl", v?.url ?? null, { shouldValidate: true });

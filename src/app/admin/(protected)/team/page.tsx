@@ -280,7 +280,7 @@ export default function AdminTeamPage() {
           <div>
             <ImageUploader
               label="Portrait officiel"
-              description="Photo de portrait professionnelle (Local, URL web, Google Drive, Dropbox)."
+              description="Photo de portrait professionnelle (Local, Google Drive, Dropbox)."
               value={photoUrl ? { url: photoUrl, publicId: photoPublicId ?? undefined } : null}
               onChange={(v) => {
                 setValue("photoUrl", v?.url ?? null, { shouldValidate: true });

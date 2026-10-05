@@ -327,7 +327,7 @@ export default function AdminProgramsPage() {
           <div>
             <ImageUploader
               label="Photo de couverture du programme"
-              description="Affiche ou photo de terrain (Local, URL web, Google Drive, Dropbox)."
+              description="Affiche ou photo de terrain (Local, Google Drive, Dropbox)."
               value={coverImageUrl ? { url: coverImageUrl, publicId: coverImagePublicId ?? undefined } : null}
               onChange={(v) => {
                 setValue("coverImageUrl", v?.url ?? null, { shouldValidate: true });

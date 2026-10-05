@@ -278,7 +278,7 @@ export default function AdminTestimonialsPage() {
           <div>
             <ImageUploader
               label="Photo de l'auteur (optionnel)"
-              description="Portrait du témoin (Local, URL web, Google Drive, Dropbox)."
+              description="Portrait du témoin (Local, Google Drive, Dropbox)."
               value={photoUrl ? { url: photoUrl, publicId: photoPublicId ?? undefined } : null}
               onChange={(v) => {
                 setValue("photoUrl", v?.url ?? null, { shouldValidate: true });
