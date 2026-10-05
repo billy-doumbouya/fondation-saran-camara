@@ -22,6 +22,8 @@ export async function GET() {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
+    
+
     await db.execute(sql`select 1`);
     databaseConnected = true;
 
