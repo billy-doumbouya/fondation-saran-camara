@@ -250,9 +250,7 @@ export const galleryImageSchema = yup.object({
   imagePublicId: yup
     .string()
     .trim()
-    .transform((v) => (v === "" || v === undefined ? null : v))
-    .nullable()
-    .optional(),
+    .required("Identifiant d'image requis"),
   category: yup
     .string()
     .trim()
