@@ -5,6 +5,7 @@ import {
   ArrowUpRight,
   AlertCircle,
   Bell,
+  CheckCheck,
   CircleHelp,
   ShieldCheck,
   Sparkles,
@@ -13,6 +14,7 @@ import {
   ExternalLink,
   ChevronRight,
   Inbox,
+  Loader2,
   Calendar,
   FileText,
   HeartHandshake,
@@ -20,6 +22,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useRef, useCallback } from "react";
+import { toast } from "sonner";
 import CommandPalette from "@/components/admin/ui/CommandPalette";
 
 export type NotificationItem = {
@@ -89,6 +92,7 @@ export default function ProtectedAdminHeader() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [totalNotificationCount, setTotalNotificationCount] = useState(0);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
+  const [markingMessagesRead, setMarkingMessagesRead] = useState(false);
   const [notificationError, setNotificationError] = useState<string | null>(null);
   const [databaseConnected, setDatabaseConnected] = useState<boolean | null>(null);
 
@@ -125,6 +129,27 @@ export default function ProtectedAdminHeader() {
       setLoadingNotifications(false);
     }
   }, []);
+
+  const markMessagesRead = useCallback(async () => {
+    if (markingMessagesRead) return;
+
+    setMarkingMessagesRead(true);
+    try {
+      const res = await fetch("/api/admin/notifications", { method: "PATCH" });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.error || "Impossible de marquer les messages comme lus.");
+      }
+
+      toast.success(`${data.updatedCount} message(s) marqué(s) comme lu(s).`);
+      await loadNotifications();
+      window.dispatchEvent(new Event("admin-notifications-refresh"));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
+    } finally {
+      setMarkingMessagesRead(false);
+    }
+  }, [loadNotifications, markingMessagesRead]);
 
   // Chargement initial + rafraîchissement périodique (toutes les 90s)
   useEffect(() => {
@@ -465,36 +490,55 @@ export default function ProtectedAdminHeader() {
 
                 {!loadingNotifications &&
                   notifications.map((item) => (
-                    <button
+                    <div
                       key={item.id}
-                      type="button"
-                      onClick={() => handleNotificationClick(item.href)}
-                      className="group flex w-full items-start justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white p-3.5 text-left transition-all hover:border-primary-400 hover:bg-primary-50/20 hover:shadow-xs"
+                      className="rounded-2xl border border-slate-200/90 bg-white p-3.5 transition-colors hover:border-primary-300"
                     >
-                      <div className="flex items-start gap-3">
-                        <span
-                          className={`mt-1 flex h-2 w-2 shrink-0 rounded-full ${
-                            item.accent === "primary"
-                              ? "bg-primary-600 ring-4 ring-primary-100"
-                              : item.accent === "gold"
-                              ? "bg-amber-500 ring-4 ring-amber-100"
-                              : "bg-navy-600 ring-4 ring-navy-100"
-                          }`}
-                        />
-                        <div>
-                          <p className="text-xs font-bold text-navy-950 group-hover:text-primary-800 transition-colors">
-                            {item.title}
-                          </p>
-                          <p className="mt-0.5 text-xs text-slate-500 leading-snug">
-                            {item.description}
-                          </p>
+                      <button
+                        type="button"
+                        onClick={() => handleNotificationClick(item.href)}
+                        className="group flex w-full items-start justify-between gap-3 text-left"
+                      >
+                        <div className="flex items-start gap-3">
+                          <span
+                            className={`mt-1 flex h-2 w-2 shrink-0 rounded-full ${
+                              item.accent === "primary"
+                                ? "bg-primary-600 ring-4 ring-primary-100"
+                                : item.accent === "gold"
+                                ? "bg-amber-500 ring-4 ring-amber-100"
+                                : "bg-navy-600 ring-4 ring-navy-100"
+                            }`}
+                          />
+                          <div>
+                            <p className="text-xs font-bold text-navy-950 group-hover:text-primary-800 transition-colors">
+                              {item.title}
+                            </p>
+                            <p className="mt-0.5 text-xs text-slate-500 leading-snug">
+                              {item.description}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <ChevronRight
-                        size={15}
-                        className="shrink-0 text-slate-300 group-hover:text-primary-600 group-hover:translate-x-0.5 transition-all mt-1"
-                      />
-                    </button>
+                        <ChevronRight
+                          size={15}
+                          className="mt-1 shrink-0 text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-primary-600"
+                        />
+                      </button>
+                      {item.id === "messages" && (
+                        <button
+                          type="button"
+                          onClick={markMessagesRead}
+                          disabled={markingMessagesRead}
+                          className="ml-5 mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold text-primary-700 transition-colors hover:text-primary-900 disabled:cursor-wait disabled:opacity-60"
+                        >
+                          {markingMessagesRead ? (
+                            <Loader2 size={13} className="animate-spin" />
+                          ) : (
+                            <CheckCheck size={13} />
+                          )}
+                          {markingMessagesRead ? "Marquage en cours..." : "Marquer tous comme lus"}
+                        </button>
+                      )}
+                    </div>
                   ))}
               </div>
 

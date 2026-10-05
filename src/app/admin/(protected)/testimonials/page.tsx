@@ -15,6 +15,7 @@ import ImageUploader from "@/components/admin/ImageUploader";
 import { testimonialSchema, type TestimonialFormValues } from "@/lib/validations";
 import type { Testimonial } from "@/lib/db/schema";
 import { playConfirmSound } from "@/lib/sound";
+import { useAdminUIStore } from "@/lib/store";
 
 async function fetchTestimonials(): Promise<Testimonial[]> {
   const res = await fetch("/api/testimonials");
@@ -23,6 +24,7 @@ async function fetchTestimonials(): Promise<Testimonial[]> {
 }
 
 export default function AdminTestimonialsPage() {
+  const imageUploadInProgress = useAdminUIStore((state) => state.activeImageUploadIds.length > 0);
   const queryClient = useQueryClient();
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["admin-testimonials"],
@@ -229,7 +231,9 @@ export default function AdminTestimonialsPage() {
         description="Partagez l'impact concret de la fondation à travers les mots de ses bénéficiaires."
         size="xl"
       >
-        <form onSubmit={handleSubmit((v) => saveMutation.mutate(v))} className="space-y-5">
+        <form onSubmit={handleSubmit((v) => {
+          if (!imageUploadInProgress) saveMutation.mutate(v);
+        })} className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-semibold text-navy-800">Nom complet de l&apos;auteur</label>
@@ -313,7 +317,7 @@ export default function AdminTestimonialsPage() {
             </button>
             <button
               type="submit"
-              disabled={saveMutation.isPending}
+              disabled={saveMutation.isPending || imageUploadInProgress}
               className="flex items-center justify-center gap-2 rounded-full bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-primary-700 disabled:opacity-60 transition-all min-h-[42px]"
             >
               {saveMutation.isPending && <Loader2 className="animate-spin" size={16} />}

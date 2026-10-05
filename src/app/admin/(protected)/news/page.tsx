@@ -16,6 +16,7 @@ import { newsSchema, type NewsFormValues } from "@/lib/validations";
 import type { News } from "@/lib/db/schema";
 import { formatDate } from "@/lib/utils";
 import { playConfirmSound } from "@/lib/sound";
+import { useAdminUIStore } from "@/lib/store";
 
 async function fetchNews(): Promise<News[]> {
   const res = await fetch("/api/news");
@@ -33,6 +34,7 @@ function slugify(text: string): string {
 }
 
 export default function AdminNewsPage() {
+  const imageUploadInProgress = useAdminUIStore((state) => state.activeImageUploadIds.length > 0);
   const queryClient = useQueryClient();
   const { data: items = [], isLoading } = useQuery({ queryKey: ["admin-news"], queryFn: fetchNews });
   const [modalOpen, setModalOpen] = useState(false);
@@ -216,7 +218,9 @@ export default function AdminNewsPage() {
         description="Complétez les informations pour la publication sur le blog et les réseaux."
         size="2xl"
       >
-        <form onSubmit={handleSubmit((v) => saveMutation.mutate(v))} className="space-y-5">
+        <form onSubmit={handleSubmit((v) => {
+          if (!imageUploadInProgress) saveMutation.mutate(v);
+        })} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
               <label className="text-sm font-semibold text-navy-800">Titre de l&apos;article</label>
@@ -308,7 +312,7 @@ export default function AdminNewsPage() {
             </button>
             <button
               type="submit"
-              disabled={saveMutation.isPending}
+              disabled={saveMutation.isPending || imageUploadInProgress}
               className="flex items-center justify-center gap-2 rounded-full bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-primary-700 disabled:opacity-60 transition-all min-h-[42px]"
             >
               {saveMutation.isPending && <Loader2 className="animate-spin" size={16} />}

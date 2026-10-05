@@ -12,6 +12,7 @@ import ImageUploader from "@/components/admin/ImageUploader";
 import type { GalleryImage } from "@/lib/db/schema";
 import { GALLERY_CATEGORIES, GALLERY_CATEGORY_LABELS, type GalleryCategory } from "@/lib/site-data";
 import { playConfirmSound } from "@/lib/sound";
+import { useAdminUIStore } from "@/lib/store";
 
 async function fetchGallery(): Promise<GalleryImage[]> {
   const res = await fetch("/api/gallery");
@@ -20,6 +21,7 @@ async function fetchGallery(): Promise<GalleryImage[]> {
 }
 
 export default function AdminGalleryPage() {
+  const imageUploadInProgress = useAdminUIStore((state) => state.activeImageUploadIds.length > 0);
   const queryClient = useQueryClient();
   const { data: items = [], isLoading } = useQuery({ queryKey: ["admin-gallery"], queryFn: fetchGallery });
   const [modalOpen, setModalOpen] = useState(false);
@@ -253,8 +255,10 @@ export default function AdminGalleryPage() {
             </button>
             <button
               type="button"
-              onClick={() => saveMutation.mutate()}
-              disabled={saveMutation.isPending || !pending?.url}
+              onClick={() => {
+                if (!imageUploadInProgress) saveMutation.mutate();
+              }}
+              disabled={saveMutation.isPending || imageUploadInProgress || !pending?.url}
               className="flex items-center justify-center gap-2 rounded-full bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-primary-700 disabled:opacity-50 transition-all min-h-[42px]"
             >
               {saveMutation.isPending && <Loader2 className="animate-spin" size={16} />}

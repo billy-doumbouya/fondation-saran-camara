@@ -252,6 +252,12 @@ export const contactRepo = {
       .update(contactMessages)
       .set({ isRead: true })
       .where(eq(contactMessages.id, id)),
+  markAllRead: () =>
+    db
+      .update(contactMessages)
+      .set({ isRead: true })
+      .where(eq(contactMessages.isRead, false))
+      .returning({ id: contactMessages.id }),
   remove: (id: number) =>
     db
       .delete(contactMessages)

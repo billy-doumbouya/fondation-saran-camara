@@ -22,6 +22,7 @@ import {
   type AdminPasswordUpdateFormValues,
 } from "@/lib/validations";
 import { DEFAULT_BRAND } from "@/lib/site-data";
+import { useAdminUIStore } from "@/lib/store";
 
 async function fetchSettings(): Promise<SiteSettingsFormValues> {
   const res = await fetch("/api/admin/settings");
@@ -30,6 +31,7 @@ async function fetchSettings(): Promise<SiteSettingsFormValues> {
 }
 
 export default function AdminSettingsPage() {
+  const imageUploadInProgress = useAdminUIStore((state) => state.activeImageUploadIds.length > 0);
   const queryClient = useQueryClient();
   const { data: settings, isLoading } = useQuery({
     queryKey: ["admin-settings"],
@@ -124,7 +126,9 @@ export default function AdminSettingsPage() {
       <div className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
         {/* Formulaire des paramètres du site */}
         <form
-          onSubmit={settingsForm.handleSubmit((v) => saveSettingsMutation.mutate(v))}
+          onSubmit={settingsForm.handleSubmit((v) => {
+            if (!imageUploadInProgress) saveSettingsMutation.mutate(v);
+          })}
           className="space-y-5 rounded-[28px] border border-navy-100 bg-white p-5 shadow-sm sm:p-6"
         >
           <div className="flex items-center gap-2 text-primary-700">
@@ -305,7 +309,7 @@ export default function AdminSettingsPage() {
 
           <button
             type="submit"
-            disabled={saveSettingsMutation.isPending}
+            disabled={saveSettingsMutation.isPending || imageUploadInProgress}
             className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_25px_rgba(34,122,63,0.22)] transition-all hover:-translate-y-0.5 hover:bg-primary-700 disabled:opacity-60 min-h-[44px]"
           >
             {saveSettingsMutation.isPending && <Loader2 className="animate-spin" size={16} />}

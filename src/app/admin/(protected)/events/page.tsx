@@ -16,6 +16,7 @@ import { eventSchema, type EventFormValues } from "@/lib/validations";
 import type { EventItem } from "@/lib/db/schema";
 import { formatDateTime } from "@/lib/utils";
 import { playConfirmSound } from "@/lib/sound";
+import { useAdminUIStore } from "@/lib/store";
 
 async function fetchEvents(): Promise<EventItem[]> {
   const res = await fetch("/api/events");
@@ -30,6 +31,7 @@ function toLocalInputValue(date: string | Date) {
 }
 
 export default function AdminEventsPage() {
+  const imageUploadInProgress = useAdminUIStore((state) => state.activeImageUploadIds.length > 0);
   const queryClient = useQueryClient();
   const { data: items = [], isLoading } = useQuery({ queryKey: ["admin-events"], queryFn: fetchEvents });
   const [modalOpen, setModalOpen] = useState(false);
@@ -244,7 +246,9 @@ export default function AdminEventsPage() {
         description="Renseignez les détails, la date et le lieu. L’affiche est facultative et apparaîtra sur la carte publique."
         size="xl"
       >
-        <form onSubmit={handleSubmit((v) => saveMutation.mutate(v))} className="space-y-5">
+        <form onSubmit={handleSubmit((v) => {
+          if (!imageUploadInProgress) saveMutation.mutate(v);
+        })} className="space-y-5">
           {/* Titre */}
           <div>
             <label className="text-sm font-semibold text-navy-800">Titre de l&apos;événement</label>
@@ -339,7 +343,7 @@ export default function AdminEventsPage() {
             </button>
             <button
               type="submit"
-              disabled={saveMutation.isPending}
+              disabled={saveMutation.isPending || imageUploadInProgress}
               className="flex items-center justify-center gap-2 rounded-full bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-primary-700 disabled:opacity-60 transition-all min-h-10.5"
             >
               {saveMutation.isPending && <Loader2 className="animate-spin" size={16} />}

@@ -108,7 +108,7 @@ export default function AdminSidebar() {
       </div>
 
       {/* Groupes de navigation */}
-      <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-4 scrollbar-thin scrollbar-thumb-white/10">
+      <nav className="admin-sidebar-scroll flex-1 space-y-6 overflow-y-auto overscroll-contain px-3 py-4">
         {NAV_GROUPS.map((group) => (
           <div key={group.label} className="space-y-1">
             <p className="px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 select-none">

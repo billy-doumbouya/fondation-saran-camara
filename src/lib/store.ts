@@ -2,14 +2,27 @@ import { create } from "zustand";
 
 interface AdminUIState {
   sidebarOpen: boolean;
+  activeImageUploadIds: string[];
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
+  setImageUploadInProgress: (id: string, inProgress: boolean) => void;
 }
 
 export const useAdminUIStore = create<AdminUIState>((set) => ({
   sidebarOpen: false,
+  activeImageUploadIds: [],
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
+  setImageUploadInProgress: (id, inProgress) =>
+    set((state) => {
+      const isActive = state.activeImageUploadIds.includes(id);
+      if (isActive === inProgress) return state;
+      return {
+        activeImageUploadIds: inProgress
+          ? [...state.activeImageUploadIds, id]
+          : state.activeImageUploadIds.filter((activeId) => activeId !== id),
+      };
+    }),
 }));
 
 interface LogoTapState {

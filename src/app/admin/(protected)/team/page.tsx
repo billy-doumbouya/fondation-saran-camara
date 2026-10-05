@@ -15,6 +15,7 @@ import ImageUploader from "@/components/admin/ImageUploader";
 import { teamMemberSchema, type TeamMemberFormValues } from "@/lib/validations";
 import type { TeamMember } from "@/lib/db/schema";
 import { playConfirmSound } from "@/lib/sound";
+import { useAdminUIStore } from "@/lib/store";
 
 const ORGAN_LABELS: Record<string, string> = {
   fondatrice: "Fondatrice & Direction",
@@ -29,6 +30,7 @@ async function fetchTeam(): Promise<TeamMember[]> {
 }
 
 export default function AdminTeamPage() {
+  const imageUploadInProgress = useAdminUIStore((state) => state.activeImageUploadIds.length > 0);
   const queryClient = useQueryClient();
   const { data: items = [], isLoading } = useQuery({ queryKey: ["admin-team"], queryFn: fetchTeam });
   const [modalOpen, setModalOpen] = useState(false);
@@ -219,7 +221,9 @@ export default function AdminTeamPage() {
         description="Renseignez le nom, la fonction, la biographie et la photo officielle."
         size="xl"
       >
-        <form onSubmit={handleSubmit((v) => saveMutation.mutate(v))} className="space-y-5">
+        <form onSubmit={handleSubmit((v) => {
+          if (!imageUploadInProgress) saveMutation.mutate(v);
+        })} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-semibold text-navy-800">Nom complet</label>
@@ -303,7 +307,7 @@ export default function AdminTeamPage() {
             </button>
             <button
               type="submit"
-              disabled={saveMutation.isPending}
+              disabled={saveMutation.isPending || imageUploadInProgress}
               className="flex items-center justify-center gap-2 rounded-full bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-primary-700 disabled:opacity-60 transition-all min-h-[42px]"
             >
               {saveMutation.isPending && <Loader2 className="animate-spin" size={16} />}

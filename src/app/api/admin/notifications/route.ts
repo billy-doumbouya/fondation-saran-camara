@@ -143,3 +143,21 @@ export async function GET() {
     );
   }
 }
+
+export async function PATCH() {
+  try {
+    const authed = await isAuthenticated();
+    if (!authed) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+    }
+
+    const updatedMessages = await contactRepo.markAllRead();
+    return NextResponse.json({ success: true, updatedCount: updatedMessages.length });
+  } catch (error) {
+    console.error("Admin notifications mark-read failed", error);
+    return NextResponse.json(
+      { error: "Impossible de marquer les messages comme lus" },
+      { status: 500 }
+    );
+  }
+}

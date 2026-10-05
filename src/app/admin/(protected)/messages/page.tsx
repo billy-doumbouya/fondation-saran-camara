@@ -88,13 +88,32 @@ export default function AdminMessagesPage() {
     {
       header: "Action",
       render: (row) => (
-        <button
-          type="button"
-          onClick={() => setSelectedId(row.id)}
-          className="rounded-lg border border-navy-200 px-2.5 py-1.5 text-xs font-medium text-navy-700 hover:border-primary-300 hover:text-primary-700"
-        >
-          Voir
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setSelectedId(row.id)}
+            className="rounded-lg border border-navy-200 px-2.5 py-1.5 text-xs font-medium text-navy-700 hover:border-primary-300 hover:text-primary-700"
+          >
+            Voir
+          </button>
+          {!row.isRead && (
+            <button
+              type="button"
+              onClick={() => markReadMutation.mutate(row.id)}
+              disabled={markReadMutation.isPending}
+              aria-label={`Marquer le message de ${row.name} comme lu`}
+              title="Marquer comme lu"
+              className="inline-flex items-center gap-1 rounded-lg border border-primary-200 bg-primary-50 px-2.5 py-1.5 text-xs font-semibold text-primary-700 hover:border-primary-300 hover:bg-primary-100 disabled:cursor-wait disabled:opacity-60"
+            >
+              {markReadMutation.isPending && markReadMutation.variables === row.id ? (
+                <Loader2 size={13} className="animate-spin" />
+              ) : (
+                <CheckCheck size={13} />
+              )}
+              Marquer lu
+            </button>
+          )}
+        </div>
       ),
     },
   ];

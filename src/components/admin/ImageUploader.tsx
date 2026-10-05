@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect, useId } from "react";
 import Image from "next/image";
 import {
   Loader2,
@@ -11,6 +11,7 @@ import {
   ImagePlus,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useAdminUIStore } from "@/lib/store";
 
 declare global {
   interface Window {
@@ -63,12 +64,27 @@ export default function ImageUploader({
   description,
   aspectRatio = "video",
 }: ImageUploaderProps) {
+  const uploadId = useId();
+  const setImageUploadInProgress = useAdminUIStore((state) => state.setImageUploadInProgress);
   const [isUploading, setIsUploading] = useState(false);
   const [tempPreviewUrl, setTempPreviewUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const [sourceUrl, setSourceUrl] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const setUploadState = useCallback(
+    (inProgress: boolean) => {
+      setIsUploading(inProgress);
+      setImageUploadInProgress(uploadId, inProgress);
+    },
+    [setImageUploadInProgress, uploadId]
+  );
+
+  useEffect(
+    () => () => setImageUploadInProgress(uploadId, false),
+    [setImageUploadInProgress, uploadId]
+  );
 
   const displayUrl = tempPreviewUrl || value?.url;
 
@@ -151,7 +167,7 @@ export default function ImageUploader({
 
     const localPreview = URL.createObjectURL(file);
     setTempPreviewUrl(localPreview);
-    setIsUploading(true);
+    setUploadState(true);
 
     try {
       const data = await uploadToCloudinary(file);
@@ -168,7 +184,7 @@ export default function ImageUploader({
       setTempPreviewUrl(null);
       URL.revokeObjectURL(localPreview);
     } finally {
-      setIsUploading(false);
+      setUploadState(false);
     }
   };
 
@@ -186,7 +202,7 @@ export default function ImageUploader({
       return;
     }
 
-    setIsUploading(true);
+    setUploadState(true);
     try {
       const data = await uploadToCloudinary(url);
       onChange({ url: data.secure_url, publicId: data.public_id });
@@ -195,7 +211,7 @@ export default function ImageUploader({
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erreur lors de l'import de l'image.");
     } finally {
-      setIsUploading(false);
+      setUploadState(false);
     }
   };
 
@@ -289,17 +305,17 @@ export default function ImageUploader({
         (error, result) => {
           if (error) {
             console.error("Erreur Cloudinary:", error);
-            setIsUploading(false);
+            setUploadState(false);
             toast.error(error instanceof Error ? error.message : "Cloudinary n'a pas pu importer cette image.");
           }
           if (result && result.event === "queues-start") {
-            setIsUploading(true);
+            setUploadState(true);
           }
           if (result && result.event === "queues-end") {
-            setIsUploading(false);
+            setUploadState(false);
           }
           if (result && result.event === "success" && result.info?.secure_url) {
-            setIsUploading(false);
+            setUploadState(false);
             setTempPreviewUrl(null);
             onChange({
               url: result.info.secure_url,
@@ -320,7 +336,7 @@ export default function ImageUploader({
     } finally {
       setIsInitializing(false);
     }
-  }, [folder, onChange]);
+  }, [folder, onChange, setUploadState]);
 
   return (
     <div className="space-y-1.5">
