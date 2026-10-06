@@ -269,10 +269,10 @@ export default function ProtectedAdminHeader() {
             </span>
             <span className="font-mono text-[10px]">
               {databaseConnected === true
-                ? "Neon connecté"
+                ? "Données accessibles"
                 : databaseConnected === false
-                ? "Neon indisponible"
-                : "Vérification Neon"}
+                ? "Données indisponibles"
+                : "Vérification en cours"}
             </span>
           </div>
 
