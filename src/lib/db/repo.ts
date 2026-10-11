@@ -1,4 +1,4 @@
-import { desc, eq, asc, like, inArray, and, lt } from "drizzle-orm";
+import { desc, eq, asc, like, inArray, and, lt, sql } from "drizzle-orm";
 import { db } from "./index";
 import {
   news,
@@ -299,6 +299,28 @@ export const donationsRepo = {
   listAll: async () => {
     await donationsRepo.expireStalePending();
     return db.select().from(donations).orderBy(desc(donations.createdAt));
+  },
+};
+export const adminNotificationsRepo = {
+  getCounts: async () => {
+    const result = await db.execute(sql`
+      SELECT
+        (SELECT COUNT(*)::int FROM ${contactMessages} WHERE ${contactMessages.isRead} = false) AS "pendingMessages",
+        (SELECT COUNT(*)::int FROM ${donations} WHERE ${donations.status} = 'pending' AND ${donations.createdAt} >= NOW() - INTERVAL '30 minutes') AS "pendingDonations",
+        (SELECT COUNT(*)::int FROM ${donations} WHERE ${donations.status} = 'success' AND ${donations.createdAt} > NOW() - INTERVAL '7 days') AS "recentSuccessDonations",
+        (SELECT COUNT(*)::int FROM ${events} WHERE ${events.startAt} >= NOW()) AS "upcomingEvents",
+        (SELECT COUNT(*)::int FROM ${news} WHERE ${news.published} = false) AS "unpublishedNews",
+        (SELECT COUNT(*)::int FROM ${programs} WHERE ${programs.published} = false) AS "unpublishedPrograms"
+    `);
+
+    return result.rows[0] as {
+      pendingMessages: number;
+      pendingDonations: number;
+      recentSuccessDonations: number;
+      upcomingEvents: number;
+      unpublishedNews: number;
+      unpublishedPrograms: number;
+    };
   },
 };
 /* -------------------------- SETTINGS -------------------------- */

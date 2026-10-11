@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion, type Variants } from "motion/react";
 import { ArrowRight, ChevronDown, HeartHandshake } from "lucide-react";
@@ -36,7 +36,27 @@ export default function Hero({ videoUrl, posterUrl }: HeroProps) {
   const activeVideoUrl = videoUrl || DEFAULT_SCHOOL_VIDEO;
   const activePosterUrl = posterUrl || DEFAULT_SCHOOL_POSTER;
   const [videoFailed, setVideoFailed] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
   const reduce = useReducedMotion() ?? false;
+
+  useEffect(() => {
+    const startVideo = () => setVideoReady(true);
+    const idleWindow = window as unknown as {
+      requestIdleCallback?: (
+        callback: IdleRequestCallback,
+        options?: IdleRequestOptions
+      ) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
+
+    if (idleWindow.requestIdleCallback) {
+      const idleId = idleWindow.requestIdleCallback(startVideo, { timeout: 2500 });
+      return () => idleWindow.cancelIdleCallback?.(idleId);
+    }
+
+    const timeoutId = globalThis.setTimeout(startVideo, 1200);
+    return () => globalThis.clearTimeout(timeoutId);
+  }, []);
 
   return (
     <section
@@ -53,9 +73,9 @@ export default function Hero({ videoUrl, posterUrl }: HeroProps) {
             muted
             loop
             playsInline
-            preload="metadata"
+            preload="none"
             poster={activePosterUrl}
-            src={activeVideoUrl}
+            src={videoReady ? activeVideoUrl : undefined}
             onError={() => setVideoFailed(true)}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

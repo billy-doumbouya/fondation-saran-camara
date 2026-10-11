@@ -136,7 +136,12 @@ export default function ImageUploader({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ folder }),
     });
-    if (!sigRes.ok) throw new Error("Signature Cloudinary refusée.");
+    if (!sigRes.ok) {
+      const errorData = await sigRes.json().catch(() => ({}));
+      throw new Error(
+        errorData.error || `Signature Cloudinary refusée (HTTP ${sigRes.status}).`
+      );
+    }
     const { signature, timestamp, apiKey, cloudName } = await sigRes.json();
 
     const formData = new FormData();

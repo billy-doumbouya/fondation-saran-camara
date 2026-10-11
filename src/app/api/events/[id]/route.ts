@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAuthenticated } from "@/lib/auth";
 import { eventsRepo } from "@/lib/db/repo";
 import { eventSchema } from "@/lib/validations";
+import { invalidateEventsCache } from "@/lib/events-cache";
 
 export const runtime = "nodejs";
 
@@ -18,6 +19,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
       startAt: new Date(data.startAt),
       endAt: data.endAt ? new Date(data.endAt) : null,
     });
+    invalidateEventsCache();
     return NextResponse.json(updated);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Requête invalide.";
@@ -29,5 +31,6 @@ export async function DELETE(request: NextRequest, { params }: Params) {
   if (!(await isAuthenticated())) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   const { id } = await params;
   await eventsRepo.remove(Number(id));
+  invalidateEventsCache();
   return NextResponse.json({ ok: true });
 }

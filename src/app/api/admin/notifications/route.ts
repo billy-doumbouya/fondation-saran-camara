@@ -1,15 +1,6 @@
 import { NextResponse } from "next/server";
-import { sql } from "drizzle-orm";
 import { isAuthenticated } from "@/lib/auth";
-import { db } from "@/lib/db";
-import {
-  contactRepo,
-  eventsRepo,
-  newsRepo,
-  programsRepo,
-  testimonialsRepo,
-  donationsRepo,
-} from "@/lib/db/repo";
+import { adminNotificationsRepo, contactRepo } from "@/lib/db/repo";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,99 +13,84 @@ export async function GET() {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    try {
-      await db.execute(sql`select 1`);
-      databaseConnected = true;
-    } catch (error) {
-      console.warn("Neon health check failed", error);
-    }
-
-    const [
+    const counts = await adminNotificationsRepo.getCounts().catch((error) => {
+      console.warn("Neon notifications query failed", error);
+      return null;
+    });
+    databaseConnected = counts !== null;
+    const {
       pendingMessages,
-      allEvents,
-      allNews,
-      allPrograms,
-      allTestimonials,
-      allDonations,
-    ] = await Promise.all([
-      contactRepo.listUnread().catch(() => []),
-      eventsRepo.listAll().catch(() => []),
-      newsRepo.listAll().catch(() => []),
-      programsRepo.listAll().catch(() => []),
-      testimonialsRepo.listAll().catch(() => []),
-      donationsRepo.listAll().catch(() => []),
-    ]);
+      pendingDonations,
+      recentSuccessDonations,
+      upcomingEvents,
+      unpublishedNews,
+      unpublishedPrograms,
+    } = counts ?? {
+      pendingMessages: 0,
+      pendingDonations: 0,
+      recentSuccessDonations: 0,
+      upcomingEvents: 0,
+      unpublishedNews: 0,
+      unpublishedPrograms: 0,
+    };
 
     const items = [];
 
     // 1. Messages de contact non lus
-    if (pendingMessages.length > 0) {
+    if (pendingMessages > 0) {
       items.push({
         id: "messages",
         title: "Messages reçus",
-        description: `${pendingMessages.length} nouveau${
-          pendingMessages.length > 1 ? "x" : ""
-        } message${pendingMessages.length > 1 ? "s" : ""} en attente de lecture`,
+        description: `${pendingMessages} nouveau${
+          pendingMessages > 1 ? "x" : ""
+        } message${pendingMessages > 1 ? "s" : ""} en attente de lecture`,
         accent: "primary" as const,
         href: "/admin/messages",
-        count: pendingMessages.length,
+        count: pendingMessages,
       });
     }
 
     // 2. Dons récents ou en attente
-    const pendingDonations = allDonations.filter((d) => d.status === "pending");
-    const recentSuccessDonations = allDonations.filter(
-      (d) =>
-        d.status === "success" &&
-        new Date(d.createdAt).getTime() > Date.now() - 7 * 86400000
-    );
-
-    if (pendingDonations.length > 0) {
+    if (pendingDonations > 0) {
       items.push({
         id: "donations-pending",
         title: "Dons en attente",
-        description: `${pendingDonations.length} transaction${
-          pendingDonations.length > 1 ? "s" : ""
+        description: `${pendingDonations} transaction${
+          pendingDonations > 1 ? "s" : ""
         } de don en cours de confirmation`,
         accent: "gold" as const,
         href: "/admin/donations",
-        count: pendingDonations.length,
+        count: pendingDonations,
       });
-    } else if (recentSuccessDonations.length > 0) {
+    } else if (recentSuccessDonations > 0) {
       items.push({
         id: "donations-success",
         title: "Dons confirmés (7 jours)",
-        description: `${recentSuccessDonations.length} don${
-          recentSuccessDonations.length > 1 ? "s" : ""
-        } validé${recentSuccessDonations.length > 1 ? "s" : ""} récemment`,
+        description: `${recentSuccessDonations} don${
+          recentSuccessDonations > 1 ? "s" : ""
+        } validé${recentSuccessDonations > 1 ? "s" : ""} récemment`,
         accent: "primary" as const,
         href: "/admin/donations",
-        count: recentSuccessDonations.length,
+        count: recentSuccessDonations,
       });
     }
 
     // 3. Événements à venir
-    const now = new Date();
-    const upcomingEvents = allEvents.filter(
-      (event) => new Date(event.startAt) >= now
-    );
-    if (upcomingEvents.length > 0) {
+    if (upcomingEvents > 0) {
       items.push({
         id: "events",
         title: "Événements à venir",
-        description: `${upcomingEvents.length} rendez-vous planifié${
-          upcomingEvents.length > 1 ? "s" : ""
+        description: `${upcomingEvents} rendez-vous planifié${
+          upcomingEvents > 1 ? "s" : ""
         } dans l'agenda`,
         accent: "gold" as const,
         href: "/admin/events",
-        count: upcomingEvents.length,
+        count: upcomingEvents,
       });
     }
 
     // 4. Brouillons / Contenus non publiés
-    const unpublishedNews = allNews.filter((n) => !n.published);
-    const unpublishedPrograms = allPrograms.filter((p) => !p.published);
-    const draftCount = unpublishedNews.length + unpublishedPrograms.length;
+    const draftCount = unpublishedNews + unpublishedPrograms;
 
     if (draftCount > 0) {
       items.push({
@@ -126,7 +102,7 @@ export async function GET() {
           draftCount > 1 ? "s" : ""
         }`,
         accent: "navy" as const,
-        href: unpublishedNews.length > 0 ? "/admin/news" : "/admin/programs",
+        href: unpublishedNews > 0 ? "/admin/news" : "/admin/programs",
         count: draftCount,
       });
     }

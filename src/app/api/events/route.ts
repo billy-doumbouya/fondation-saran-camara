@@ -2,12 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAuthenticated } from "@/lib/auth";
 import { eventsRepo } from "@/lib/db/repo";
 import { eventSchema } from "@/lib/validations";
+import {
+  getCachedAllEvents,
+  getCachedPublishedEvents,
+  invalidateEventsCache,
+} from "@/lib/events-cache";
 
 export const runtime = "nodejs";
 
 export async function GET() {
   const authed = await isAuthenticated();
-  const list = authed ? await eventsRepo.listAll() : await eventsRepo.listPublished();
+  const list = authed ? await getCachedAllEvents() : await getCachedPublishedEvents();
   return NextResponse.json(list);
 }
 
@@ -21,6 +26,7 @@ export async function POST(request: NextRequest) {
       startAt: new Date(data.startAt),
       endAt: data.endAt ? new Date(data.endAt) : null,
     });
+    invalidateEventsCache();
     return NextResponse.json(created, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Requête invalide.";

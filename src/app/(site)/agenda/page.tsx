@@ -4,7 +4,7 @@ import { CalendarClock, ArrowRight } from "lucide-react";
 import AnimatedSection from "@/components/site/animated-section";
 import InstitutionalHero from "@/components/site/institutional-hero";
 import EventCard from "@/components/site/cards/event-card";
-import { eventsRepo } from "@/lib/db/repo";
+import { getCachedPublishedEvents } from "@/lib/events-cache";
 import { isUpcoming } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -18,7 +18,7 @@ const AGENDA_HERO_BG =
   "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=1920&auto=format&fit=crop";
 
 export default async function AgendaPage() {
-  const allEvents = await eventsRepo.listPublished().catch(() => []);
+  const allEvents = await getCachedPublishedEvents().catch(() => []);
 
   // Tri ascendant par date
   const sorted = [...allEvents].sort(
