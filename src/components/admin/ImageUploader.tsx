@@ -259,7 +259,15 @@ export default function ImageUploader({
               .then((data) => callback(data.signature))
               .catch((err) => callback(null, err));
           },
-          sources: ["local", "camera", "google_drive", "dropbox"],
+          sources: [
+            "local",
+            "url",
+            "camera",
+            "google_drive",
+            "dropbox",
+            "unsplash",
+            "facebook",
+          ],
           multiple: false,
           folder,
           clientAllowedFormats: ["png", "jpeg", "jpg", "webp", "avif", "svg"],
@@ -295,9 +303,12 @@ export default function ImageUploader({
               about_uw: "Cloudinary FSCPE",
               menu: {
                 files: "Mon Appareil",
+                url: "Lien URL",
                 camera: "Caméra",
                 gdrive: "Google Drive",
                 dropbox: "Dropbox",
+                unsplash: "Unsplash",
+                facebook: "Facebook",
               },
               local: {
                 browse: "Parcourir vos fichiers",
