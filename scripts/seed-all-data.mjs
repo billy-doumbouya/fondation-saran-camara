@@ -826,131 +826,7 @@ const CONTACT_MESSAGES = [
   },
 ];
 
-// 9. DONS RÉCENTS (10 transactions en GNF pour animer les KPI du dashboard)
-const DONATIONS = [
-  {
-    reference: "DON-FSCPE-2026-001",
-    donorName: "Mamadou Lamarana Diallo",
-    donorEmail: "m.diallo@invest.gn",
-    donorPhone: "+224 622 10 20 30",
-    amount: 1500000, // 1 500 000 GNF
-    currency: "GNF",
-    provider: "geniuspay",
-    paymentMethod: "orange_money",
-    status: "success",
-    createdAt: new Date(Date.now() - 3600000 * 3),
-  },
-  {
-    reference: "DON-FSCPE-2026-002",
-    donorName: "Aissatou Barry",
-    donorEmail: "aissatou.barry@diaspora.fr",
-    donorPhone: "+33 6 45 12 89 00",
-    amount: 2500000, // 2 500 000 GNF
-    currency: "GNF",
-    provider: "geniuspay",
-    paymentMethod: "card",
-    status: "success",
-    createdAt: new Date(Date.now() - 3600000 * 8),
-  },
-  {
-    reference: "DON-FSCPE-2026-003",
-    donorName: "Dr. Ibrahima Sory Camara",
-    donorEmail: "dr.camara@sante.gov.gn",
-    donorPhone: "+224 664 30 40 50",
-    amount: 800000,
-    currency: "GNF",
-    provider: "geniuspay",
-    paymentMethod: "mtn_money",
-    status: "success",
-    createdAt: new Date(Date.now() - 3600000 * 18),
-  },
-  {
-    reference: "DON-FSCPE-2026-004",
-    donorName: "Mariama Kourouma",
-    donorEmail: "mariama.k@gmail.com",
-    donorPhone: "+224 620 55 66 77",
-    amount: 350000,
-    currency: "GNF",
-    provider: "geniuspay",
-    paymentMethod: "wave",
-    status: "success",
-    createdAt: new Date(Date.now() - 86400000),
-  },
-  {
-    reference: "DON-FSCPE-2026-005",
-    donorName: "Collectif Solidarité Matam",
-    donorEmail: "collectif.matam@solidarite.gn",
-    donorPhone: "+224 621 88 99 00",
-    amount: 5000000, // 5 000 000 GNF
-    currency: "GNF",
-    provider: "geniuspay",
-    paymentMethod: "orange_money",
-    status: "success",
-    createdAt: new Date(Date.now() - 86400000 * 2),
-  },
-  {
-    reference: "DON-FSCPE-2026-006",
-    donorName: "Boubacar Bah",
-    donorEmail: "bouba.bah@tech.gn",
-    donorPhone: "+224 628 33 22 11",
-    amount: 450000,
-    currency: "GNF",
-    provider: "geniuspay",
-    paymentMethod: "mtn_money",
-    status: "success",
-    createdAt: new Date(Date.now() - 86400000 * 3),
-  },
-  {
-    reference: "DON-FSCPE-2026-007",
-    donorName: "Fatoumata Binta Diallo",
-    donorEmail: "binta.diallo@gmail.com",
-    donorPhone: "+224 660 11 22 33",
-    amount: 200000,
-    currency: "GNF",
-    provider: "geniuspay",
-    paymentMethod: "orange_money",
-    status: "pending",
-    createdAt: new Date(Date.now() - 86400000 * 4),
-  },
-  {
-    reference: "DON-FSCPE-2026-008",
-    donorName: "Sékouba Condé",
-    donorEmail: "sekou.conde@commerce.gn",
-    donorPhone: "+224 625 77 88 99",
-    amount: 1000000,
-    currency: "GNF",
-    provider: "geniuspay",
-    paymentMethod: "wave",
-    status: "success",
-    createdAt: new Date(Date.now() - 86400000 * 5),
-  },
-  {
-    reference: "DON-FSCPE-2026-009",
-    donorName: "Hadja Mariama Sylla",
-    donorEmail: "h.sylla@marche.gn",
-    donorPhone: "+224 624 33 11 00",
-    amount: 600000,
-    currency: "GNF",
-    provider: "geniuspay",
-    paymentMethod: "orange_money",
-    status: "success",
-    createdAt: new Date(Date.now() - 86400000 * 6),
-  },
-  {
-    reference: "DON-FSCPE-2026-010",
-    donorName: "Ousmane Bangoura",
-    donorEmail: "ousmane.b@yahoo.fr",
-    donorPhone: "+224 623 44 55 66",
-    amount: 750000,
-    currency: "GNF",
-    provider: "geniuspay",
-    paymentMethod: "card",
-    status: "success",
-    createdAt: new Date(Date.now() - 86400000 * 7),
-  },
-];
-
-// 10. ABONNÉS NEWSLETTER (10 abonnés réalistes pour la page newsletter admin)
+// 9. ABONNÉS NEWSLETTER (10 abonnés réalistes pour la page newsletter admin)
 const NEWSLETTER_SUBSCRIBERS = [
   { email: "fatoumata.diallo@gmail.com", source: "footer", daysAgo: 1 },
   { email: "amadou.sow@orange-guinee.com", source: "modal", daysAgo: 2 },
@@ -980,7 +856,6 @@ async function runSeed() {
     await sql.query("DELETE FROM gallery_images");
     await sql.query("DELETE FROM partners");
     await sql.query("DELETE FROM contact_messages");
-    await sql.query("DELETE FROM donations");
 
     console.log("📥 Insertion des 10 Actualités / Articles...");
     for (const item of NEWS_ITEMS) {
@@ -1051,15 +926,6 @@ async function runSeed() {
         `INSERT INTO contact_messages (name, email, phone, subject, message, is_read, created_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [item.name, item.email, item.phone, item.subject, item.message, item.isRead, item.createdAt]
-      );
-    }
-
-    console.log("📥 Insertion des 10 Dons de démonstration pour le tableau de bord...");
-    for (const item of DONATIONS) {
-      await sql.query(
-        `INSERT INTO donations (reference, donor_name, donor_email, donor_phone, amount, currency, provider, payment_method, status, created_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-        [item.reference, item.donorName, item.donorEmail, item.donorPhone, item.amount, item.currency, item.provider, item.paymentMethod, item.status, item.createdAt]
       );
     }
 

@@ -64,7 +64,7 @@ async function main() {
     ["site_address", "Kissosso, Commune de Matoto, Conakry, République de Guinée"],
     ["site_phone", "+224 620 32 19 16"],
     ["site_phone_secondary", "+224 628 53 22 14"],
-    ["site_email", "saran4camara@gmail.com"],
+    ["site_email", "contact@fondationsarancamara.org"],
     ["site_quote", "Offrir une éducation à un orphelin, c'est lui donner espoir d'un avenir meilleur"],
     ["site_whatsapp_number", "224628532214"],
     ["site_whatsapp_display", "+224 628 53 22 14"],

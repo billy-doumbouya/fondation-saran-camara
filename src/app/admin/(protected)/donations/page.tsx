@@ -13,6 +13,7 @@ export const metadata = {
 
 export default async function AdminDonationsPage() {
   let rows: DonationRow[] = [];
+  let allRows: DonationRow[] = [];
   try {
     await donationsRepo.expireStalePending();
     const donationRows = await db
@@ -31,22 +32,21 @@ export default async function AdminDonationsPage() {
       })
       .from(donations)
       .orderBy(desc(donations.createdAt));
-    rows = donationRows.map((row) => ({
+    allRows = donationRows.map((row) => ({
       ...row,
       createdAt: row.createdAt.toISOString(),
     }));
+    rows = allRows.filter((row) => row.status === "success");
   } catch (error) {
     console.error("Erreur chargement dons:", error);
     rows = [];
   }
 
   // Calculs statistiques
-  const totalAmountGNF = rows
-    .filter((d) => d.status === "success")
-    .reduce((sum, d) => sum + d.amount, 0);
+  const totalAmountGNF = rows.reduce((sum, d) => sum + d.amount, 0);
 
-  const successCount = rows.filter((d) => d.status === "success").length;
-  const pendingCount = rows.filter((d) => d.status === "pending").length;
+  const successCount = rows.length;
+  const pendingCount = allRows.filter((d) => d.status === "pending").length;
 
   const formatGNF = (val: number) =>
     new Intl.NumberFormat("fr-FR").format(val) + " GNF";
@@ -88,10 +88,10 @@ export default async function AdminDonationsPage() {
         />
         <AdminStatCard
           label="Total contributions"
-          value={rows.length}
+          value={allRows.length}
           icon={<CreditCard size={22} />}
           accent="sky"
-          description="Historique complet des intentions"
+          description="Toutes les transactions initiées"
         />
       </div>
 

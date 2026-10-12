@@ -15,6 +15,7 @@ import SectionHeading from "@/components/site/section-heading";
 import ProgramCard from "@/components/site/cards/program-card";
 import NewsCard from "@/components/site/cards/news-card";
 import TestimonialCard from "@/components/site/cards/testimonial-card";
+import SocialScrollWidget from "@/components/site/SocialScrollWidget";
 import {
   getHomepageNews,
   getHomepagePartners,
@@ -93,6 +94,7 @@ export default async function HomePage() {
     <>
       <DoorIntro />
       <Hero videoUrl={heroVideoUrl} posterUrl={heroPosterUrl} />
+      <SocialScrollWidget />
 
       {/* ——— Pillars ——— */}
       <section className="container-app py-20 sm:py-24">

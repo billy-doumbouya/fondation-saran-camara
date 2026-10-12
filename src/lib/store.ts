@@ -62,14 +62,3 @@ export const useChatUIStore = create<ChatUIState>((set) => ({
   setOpen: (open) => set({ open }),
 }));
 
-interface ContactFabState {
-  expanded: boolean;
-  toggleExpanded: () => void;
-  setExpanded: (expanded: boolean) => void;
-}
-
-export const useContactFabStore = create<ContactFabState>((set) => ({
-  expanded: false,
-  toggleExpanded: () => set((s) => ({ expanded: !s.expanded })),
-  setExpanded: (expanded) => set({ expanded }),
-}));

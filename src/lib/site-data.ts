@@ -39,7 +39,7 @@ export const DEFAULT_BRAND = {
   address: "Kissosso, Commune de Matoto, Conakry, République de Guinée",
   phone: "+224 620 32 19 16",
   phoneSecondary: "+224 628 53 22 14",
-  email: "saran4camara@gmail.com",
+  email: "contact@fondationsarancamara.org",
   quote: "Offrir une éducation à un orphelin, c'est lui donner espoir d'un avenir meilleur",
   whatsappNumber: "224628532214", // format international sans "+", pour les liens wa.me
   whatsappDisplay: "+224 628 53 22 14",

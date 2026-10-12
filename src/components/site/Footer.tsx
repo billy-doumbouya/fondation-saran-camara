@@ -1,18 +1,33 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { FaSquareFacebook } from "react-icons/fa6";
 
-import { Mail, MapPin, Phone, MessageCircle, Share2, ArrowRight } from "lucide-react";
+import { Mail, MapPin, Phone, MessageCircle, Share2, ArrowRight, ArrowUp } from "lucide-react";
 import { toast } from "sonner";
 import { BRAND, NAV_LINKS } from "@/lib/site-data";
 import Logo from "./Logo";
 
 export default function Footer() {
+  const footerRef = useRef<HTMLElement>(null);
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const reduceMotion = useReducedMotion() ?? false;
   const year = new Date().getFullYear();
+
+  useEffect(() => {
+    const footer = footerRef.current;
+    if (!footer) return;
+
+    const observer = new IntersectionObserver(([entry]) => {
+      setShowBackToTop(entry.isIntersecting);
+    });
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, []);
 
   const handleShare = async () => {
     const shareData = {
@@ -70,7 +85,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative overflow-hidden bg-navy-900 text-navy-100">
+    <footer ref={footerRef} className="relative overflow-hidden bg-navy-900 text-navy-100">
       {/* Top hairline gold (signature) */}
       <span className="absolute inset-x-0 top-0 h-px bg-gold-500/40" aria-hidden />
       {/* Mesh accent subtil */}
@@ -243,6 +258,40 @@ export default function Footer() {
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {showBackToTop && (
+          <motion.button
+            type="button"
+            aria-label="Remonter en haut de page"
+            title="Remonter en haut"
+            onClick={() => window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" })}
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 28, scale: 0.55, rotate: -35 }}
+            animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 18, scale: 0.75, rotate: 20 }}
+            transition={{ type: "spring", stiffness: 360, damping: 22, mass: 0.8 }}
+            whileHover={reduceMotion ? undefined : { scale: 1.1, y: -4 }}
+            whileTap={reduceMotion ? undefined : { scale: 0.9 }}
+            className="fixed bottom-5 right-24 z-55 flex h-12 w-12 items-center justify-center rounded-full border border-gold-300/70 bg-gold-400 text-navy-950 shadow-[0_12px_32px_-8px_rgba(212,160,23,0.75)] transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold-300"
+          >
+            {!reduceMotion && (
+              <motion.span
+                aria-hidden="true"
+                className="absolute inset-0 rounded-full border border-gold-200"
+                animate={{ scale: [1, 1.35], opacity: [0.65, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
+              />
+            )}
+            <motion.span
+              aria-hidden="true"
+              animate={reduceMotion ? undefined : { y: [0, -3, 0] }}
+              transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <ArrowUp size={21} strokeWidth={2.5} />
+            </motion.span>
+          </motion.button>
+        )}
+      </AnimatePresence>
     </footer>
   );
 }

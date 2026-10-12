@@ -1,5 +1,6 @@
 import { desc, eq, asc, like, inArray, and, lt, sql } from "drizzle-orm";
 import { db } from "./index";
+import { BRAND } from "@/lib/site-data";
 import {
   news,
   testimonials,
@@ -418,7 +419,15 @@ export async function buildPublicKnowledgeContext(): Promise<string> {
   const sections: string[] = [];
 
   sections.push(
-    "FONDATION SARAN CAMARA POUR L'ÉDUCATION ET LA PROTECTION DES ENFANTS (FSCPE) — Kissosso, Conakry, Guinée.",
+    [
+      `${BRAND.fullName} (${BRAND.acronym}) est une fondation basée à ${BRAND.address}.`,
+      "Mission : défendre les droits des enfants orphelins et vulnérables en Guinée et favoriser leur accès à l'éducation, à la protection sociale et à un accompagnement adapté.",
+      "Domaines d'intervention : éducation et scolarité (frais, fournitures, kits et suivi pédagogique), protection de l'enfance (droits et sensibilisation), accompagnement moral, matériel et social des orphelins, solidarité avec les familles démunies et développement local.",
+      `Fondatrice et présidente : ${BRAND.founderName}. Devise : « ${BRAND.quote} ». Valeurs mises en avant : dignité, équité, justice, transparence et solidarité.`,
+      `Contact public : ${BRAND.email} ; téléphone ${BRAND.phone} ; WhatsApp ${BRAND.whatsappDisplay}. Site officiel : https://fondationsarancamara.org.`,
+      "Pages utiles : À propos (/a-propos), Mission & vision (/mission), Programmes (/programmes), Faire un don (/don), Contact (/contact), Actualités (/actualites), Agenda (/agenda).",
+      "Le formulaire de don en ligne propose Orange Money, MTN MoMo, Moov Money, Wave et carte bancaire via GeniusPay. Ne jamais confirmer qu'un paiement a été reçu sans statut de transaction confirmé.",
+    ].join("\n"),
   );
 
   if (publishedPrograms.length) {
