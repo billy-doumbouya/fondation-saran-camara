@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   title: "Programmes & Projets — FSCPE",
   description:
     "Bourses scolaires, kits scolaires, protection et action sociale : découvrez comment la Fondation Saran Camara agit concrètement en Guinée.",
+  alternates: { canonical: "/programmes" },
 };
 export const dynamic = "force-dynamic";
 

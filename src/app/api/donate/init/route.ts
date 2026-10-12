@@ -3,6 +3,7 @@ import { donationsRepo } from "@/lib/db/repo";
 import { donationSchema } from "@/lib/validations";
 import { initGeniusPayPayment } from "@/lib/geniuspay";
 import { generateReference } from "@/lib/utils";
+import { OFFICIAL_SITE_URL } from "@/lib/site-data";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
     }
 
     const reference = generateReference();
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.fscpe.org";
+    const siteUrl = OFFICIAL_SITE_URL;
     const detectedCountry = data.customerCountry || (() => {
       const phone = (data.donorPhone || "").replace(/\s+/g, "");
       if (/^(\+|00)?224/i.test(phone)) return "GN";

@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { Toaster } from "sonner";
 import QueryProvider from "@/components/providers/QueryProvider";
 import ProgressBarProvider from "@/components/providers/ProgressBarProvider";
-import { DEFAULT_BRAND } from "@/lib/site-data";
+import { DEFAULT_BRAND, OFFICIAL_SITE_URL } from "@/lib/site-data";
 import { getSiteSettings } from "@/lib/site-settings";
 // Polices auto-hébergées via @fontsource (aucune requête réseau vers Google
 // Fonts au build ni en production — plus rapide, plus fiable, RGPD-friendly).
@@ -22,7 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const brand = { ...DEFAULT_BRAND, ...settings };
 
   return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://fscpe.org"),
+    metadataBase: new URL(OFFICIAL_SITE_URL),
     title: {
       default: `${brand.fullName} (${brand.acronym})`,
       template: `%s | ${brand.acronym}`,
@@ -46,11 +46,13 @@ export async function generateMetadata(): Promise<Metadata> {
       title: `${brand.fullName} (${brand.acronym})`,
       description: brand.slogan,
       siteName: brand.acronym,
+      images: [{ url: "/icon.png", alt: `Logo ${brand.acronym}` }],
     },
     twitter: {
       card: "summary_large_image",
       title: `${brand.fullName} (${brand.acronym})`,
       description: brand.slogan,
+      images: ["/icon.png"],
     },
     robots: { index: true, follow: true },
   };
@@ -65,6 +67,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     "@type": "NGO",
     name: brand.fullName,
     alternateName: brand.acronym,
+    url: OFFICIAL_SITE_URL,
+    logo: `${OFFICIAL_SITE_URL}/icon.png`,
     slogan: brand.slogan,
     email: brand.email,
     telephone: brand.phone,

@@ -17,6 +17,7 @@ import AtmosphereBackground from "@/components/site/ambient/AtmosphereBackground
 import ProgramCard from "@/components/site/cards/program-card";
 import { programsRepo } from "@/lib/db/repo";
 import { cn } from "@/lib/utils";
+import { OFFICIAL_SITE_URL } from "@/lib/site-data";
 
 export const dynamic = "force-dynamic";
 
@@ -62,10 +63,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `${program.title} — Programmes FSCPE`,
     description: program.summary,
+    alternates: { canonical: `/programmes/${program.slug}` },
     openGraph: {
+      url: `${OFFICIAL_SITE_URL}/programmes/${program.slug}`,
       title: program.title,
       description: program.summary,
-      images: program.coverImageUrl ? [{ url: program.coverImageUrl }] : [],
+      images: program.coverImageUrl ? [{ url: program.coverImageUrl }] : [{ url: "/icon.png" }],
     },
   };
 }

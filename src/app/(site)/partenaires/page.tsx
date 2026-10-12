@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: "Partenaires — FSCPE",
   description:
     "Merci à toutes les organisations, institutions et entreprises qui soutiennent la mission de la Fondation Saran Camara en Guinée.",
+  alternates: { canonical: "/partenaires" },
 };
 export const dynamic = "force-dynamic";
 

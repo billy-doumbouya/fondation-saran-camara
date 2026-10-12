@@ -15,6 +15,7 @@ import NewsCard from "@/components/site/cards/news-card";
 import AtmosphereBackground from "@/components/site/ambient/AtmosphereBackground";
 import { newsRepo } from "@/lib/db/repo";
 import { formatDate } from "@/lib/utils";
+import { OFFICIAL_SITE_URL } from "@/lib/site-data";
 
 export const dynamic = "force-dynamic";
 
@@ -30,10 +31,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `${item.title} — Actualités FSCPE`,
     description: item.excerpt,
+    alternates: { canonical: `/actualites/${item.slug}` },
     openGraph: {
+      url: `${OFFICIAL_SITE_URL}/actualites/${item.slug}`,
       title: item.title,
       description: item.excerpt,
-      images: item.coverImageUrl ? [{ url: item.coverImageUrl }] : [],
+      images: item.coverImageUrl ? [{ url: item.coverImageUrl }] : [{ url: "/icon.png" }],
     },
   };
 }

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -22,8 +23,24 @@ import {
   getHomepagePrograms,
   getHomepageTestimonials,
 } from "@/lib/homepage-cache";
-import { BRAND } from "@/lib/site-data";
+import { BRAND, OFFICIAL_SITE_URL } from "@/lib/site-data";
 import { getSiteSettings } from "@/lib/site-settings";
+
+export const metadata: Metadata = {
+  title: "Fondation Saran Camara pour l'Éducation et la Protection des Enfants",
+  description:
+    "La Fondation Saran Camara scolarise, protège et accompagne les enfants orphelins et vulnérables en Guinée. Découvrez ses programmes et ses actions à Conakry.",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: "FSCPE",
+    url: OFFICIAL_SITE_URL,
+    title: "Fondation Saran Camara (FSCPE) — Éducation et protection des enfants",
+    description:
+      "Scolarisation, protection de l'enfance et accompagnement des enfants orphelins et vulnérables en Guinée.",
+    images: [{ url: "/icon.png", alt: "Fondation Saran Camara pour l'Éducation et la Protection des Enfants" }],
+  },
+};
 
 const PILLARS = [
   {

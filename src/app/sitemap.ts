@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
 import { newsRepo, programsRepo } from "@/lib/db/repo";
+import { OFFICIAL_SITE_URL } from "@/lib/site-data";
 
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://fscpe.org";
+  const baseUrl = OFFICIAL_SITE_URL;
 
   const staticRoutes = [
     "",

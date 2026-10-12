@@ -22,6 +22,7 @@ export const metadata: Metadata = {
   title: "Notre Impact & Transparence — FSCPE",
   description:
     "Découvrez les résultats concrets de nos actions en Guinée, nos 4 piliers d'intervention et nos engagements stricts de traçabilité et de transparence.",
+  alternates: { canonical: "/impact" },
 };
 export const dynamic = "force-dynamic";
 

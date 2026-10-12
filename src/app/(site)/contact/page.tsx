@@ -13,6 +13,7 @@ export const metadata: Metadata = {
   title: "Contact & Échanges — Fondation Saran Camara (FSCPE)",
   description:
     "Échangez directement avec l'équipe de la Fondation Saran Camara à Conakry. Dons, parrainage, partenariats ou volontariat : nous répondons sous 24 à 48 heures.",
+  alternates: { canonical: "/contact" },
 };
 
 export const dynamic = "force-dynamic";

@@ -19,6 +19,7 @@ export const metadata: Metadata = {
   title: "Gouvernance & Organigramme — FSCPE",
   description:
     "Découvrez l'organigramme officiel et l'équipe dirigeante de la Fondation Saran Camara : Présidence, Bureau Exécutif, Conseil d'Administration et responsables de pôles opérationnels.",
+  alternates: { canonical: "/equipe" },
 };
 
 export const dynamic = "force-dynamic";

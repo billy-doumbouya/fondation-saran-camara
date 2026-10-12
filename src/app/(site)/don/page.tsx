@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: "Faire un don — FSCPE",
   description:
     "Chaque contribution aide un enfant à apprendre, à être protégé et à construire un avenir digne. Soutenez la Fondation Saran Camara.",
+  alternates: { canonical: "/don" },
 };
 
 const DONATE_HERO_BG =

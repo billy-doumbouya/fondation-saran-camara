@@ -1,11 +1,11 @@
 import type { MetadataRoute } from "next";
+import { OFFICIAL_SITE_URL } from "@/lib/site-data";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://fscpe.org";
   return {
     rules: [
       { userAgent: "*", allow: "/", disallow: ["/admin", "/api"] },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: `${OFFICIAL_SITE_URL}/sitemap.xml`,
   };
 }

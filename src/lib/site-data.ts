@@ -4,6 +4,8 @@ export interface NavLink {
   children?: { label: string; href: string; description?: string }[];
 }
 
+export const OFFICIAL_SITE_URL = "https://fondationsarancamara.org";
+
 export const NAV_LINKS: NavLink[] = [
   { label: "Accueil", href: "/" },
   {

@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   title: "Mission & Vision — FSCPE",
   description:
     "Promouvoir, accompagner et garantir l'accès à l'éducation, à la protection sociale et sanitaire, ainsi qu'à l'épanouissement global de chaque enfant vulnérable.",
+  alternates: { canonical: "/mission" },
 };
 
 const MISSION_HERO_BG =

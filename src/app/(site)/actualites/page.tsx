@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   title: "Actualités — FSCPE",
   description:
     "Retrouvez les actions de la Fondation Saran Camara, les projets livrés et les voix de celles et ceux que nous accompagnons.",
+  alternates: { canonical: "/actualites" },
 };
 export const dynamic = "force-dynamic";
 

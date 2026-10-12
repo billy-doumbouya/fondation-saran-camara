@@ -201,7 +201,7 @@ export default function AdminSettingsPage() {
               <label className="text-sm font-medium text-navy-700">Email officiel</label>
               <input
                 {...settingsForm.register("email")}
-                placeholder="Ex: contact@fscpe.org"
+                placeholder="Ex: contact@fondationsarancamara.org"
                 className="mt-1.5 w-full rounded-xl border border-navy-200 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
               />
               {settingsForm.formState.errors.email && (
@@ -255,7 +255,7 @@ export default function AdminSettingsPage() {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-navy-700">WhatsApp (libellé d'affichage)</label>
+              <label className="text-sm font-medium text-navy-700">WhatsApp (libellé d&apos;affichage)</label>
               <input
                 {...settingsForm.register("whatsappDisplay")}
                 placeholder="Ex: +224 622 00 00 00"

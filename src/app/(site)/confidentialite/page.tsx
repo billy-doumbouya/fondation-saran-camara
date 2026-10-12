@@ -20,6 +20,7 @@ export const metadata: Metadata = {
   title: "Politique de Confidentialité — Fondation Saran Camara (FSCPE)",
   description:
     "Comment la Fondation Saran Camara (FSCPE) collecte, utilise et protège vos données personnelles : dons, parrainage, newsletter et contact. Transparence et conformité au RGPD.",
+  alternates: { canonical: "/confidentialite" },
 };
 
 const PRIVACY_HERO_BG =

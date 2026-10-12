@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   title: "Agenda — FSCPE",
   description:
     "Retrouvez les prochains temps forts de la Fondation Saran Camara et venez partager chaque étape de nos engagements.",
+  alternates: { canonical: "/agenda" },
 };
 export const dynamic = "force-dynamic";
 

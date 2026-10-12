@@ -17,17 +17,20 @@ import {
 import AnimatedSection from "@/components/site/AnimatedSection";
 import InstitutionalHero from "@/components/site/InstitutionalHero";
 import SectionHeading from "@/components/site/SectionHeading";
-import { BRAND } from "@/lib/site-data";
+import { BRAND, OFFICIAL_SITE_URL } from "@/lib/site-data";
 
 export const metadata: Metadata = {
   title: "Mentions Légales & Statuts — Fondation Saran Camara (FSCPE)",
   description:
     "Mentions légales officielles de la Fondation Saran Camara pour l'Éducation et la Protection des Enfants (FSCPE). Statut ONG en Guinée, gouvernance, hébergement, dons sécurisés et charte de protection de l'enfance.",
+  alternates: { canonical: "/mentions-legales" },
   openGraph: {
+    url: `${OFFICIAL_SITE_URL}/mentions-legales`,
     title: "Mentions Légales — Fondation Saran Camara (FSCPE)",
     description:
       "Informations institutionnelles, statut d'ONG en République de Guinée, gouvernance et conformité légale de la FSCPE.",
     type: "website",
+    images: [{ url: "/icon.png", alt: "Fondation Saran Camara" }],
   },
 };
 
@@ -63,7 +66,7 @@ const SECTIONS = [
     icon: Building2,
     title: "1. Identification légale & Éditeur du site",
     body: [
-      `Le présent site internet officiel accessible à l'adresse fscpe.org (et ses sous-domaines associés) est édité par la ${BRAND.fullName} (connue sous le sigle officiel ${BRAND.acronym}).`,
+      `Le présent site internet officiel accessible à l'adresse ${OFFICIAL_SITE_URL} est édité par la ${BRAND.fullName} (connue sous le sigle officiel ${BRAND.acronym}).`,
       "La Fondation Saran Camara est une Organisation Non Gouvernementale (ONG) de droit guinéen, à vocation humanitaire, sociale, éducative et d'intérêt général, régie par les lois et règlements applicables aux associations et ONG en République de Guinée.",
     ],
     list: [
@@ -142,7 +145,7 @@ const SECTIONS = [
     icon: FileText,
     title: "7. Propriété intellectuelle & Droits réservés",
     body: [
-      `L'ensemble des éléments graphiques, textuels, photographiques, sonores, vidéo, ainsi que l'architecture logicielle et l'identité visuelle (logos, typographies, icônes, éléments 3D) composant le site fscpe.org sont la propriété exclusive de la ${BRAND.fullName}, ou font l'objet d'une licence légale d'exploitation accordée par leurs auteurs respectifs.`,
+      `L'ensemble des éléments graphiques, textuels, photographiques, sonores, vidéo, ainsi que l'architecture logicielle et l'identité visuelle (logos, typographies, icônes, éléments 3D) composant le site ${OFFICIAL_SITE_URL} sont la propriété exclusive de la ${BRAND.fullName}, ou font l'objet d'une licence légale d'exploitation accordée par leurs auteurs respectifs.`,
       "Toute reproduction, représentation, modification, publication ou adaptation totale ou partielle des éléments du site, quel que soit le moyen ou le procédé utilisé, est formellement interdite sans autorisation écrite préalable et expresse de la direction de la FSCPE. Toute exploitation non autorisée sera poursuivie conformément aux dispositions du Code de la propriété intellectuelle.",
     ],
   },
@@ -169,7 +172,7 @@ const SECTIONS = [
     icon: Scale,
     title: "10. Législation applicable & Juridiction compétente",
     body: [
-      "Les présentes mentions légales, l'utilisation du site fscpe.org ainsi que tout acte ou don qui en découle sont exclusivement régis et interprétés conformément aux lois et textes en vigueur en République de Guinée.",
+      `Les présentes mentions légales, l'utilisation du site ${OFFICIAL_SITE_URL} ainsi que tout acte ou don qui en découle sont exclusivement régis et interprétés conformément aux lois et textes en vigueur en République de Guinée.`,
       "À défaut de résolution amiable et concertée de tout litige ou contestation relatif à l'interprétation ou à l'exécution des présentes, compétence exclusive et expresse est attribuée aux tribunaux compétents du ressort de la Cour d'Appel de Conakry.",
     ],
   },
@@ -246,7 +249,7 @@ export default function MentionsLegalesPage() {
                 align="left"
                 eyebrow="Statuts & Mentions officielles"
                 title="Cadre juridique de la FSCPE"
-                description="Dernière révision : septembre 2026. Ce document officiel fixe les conditions d'identification, de publication et d'engagement de la Fondation Saran Camara."
+                description="Dernière révision : septembre 2026. Ce document officiel fixe les conditions d&apos;identification, de publication et d&apos;engagement de la Fondation Saran Camara."
               />
             </AnimatedSection>
 

@@ -5,7 +5,10 @@ import PlayConfirmSoundOnMount from "@/components/site/PlayConfirmSoundOnMount";
 import { donationsRepo } from "@/lib/db/repo";
 import { getGeniusPayPayment } from "@/lib/geniuspay";
 
-export const metadata = { title: "Merci pour votre don" };
+export const metadata = {
+  title: "Merci pour votre don",
+  robots: { index: false, follow: false },
+};
 
 type DonationStatus = "success" | "pending" | "failed";
 

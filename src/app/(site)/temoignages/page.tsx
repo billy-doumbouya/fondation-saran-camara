@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: "Témoignages — FSCPE",
   description:
     "Découvrez les histoires touchantes, les retours d'expérience et l'impact direct de nos actions à travers les voix de nos bénéficiaires et partenaires.",
+  alternates: { canonical: "/temoignages" },
 };
 export const dynamic = "force-dynamic";
 

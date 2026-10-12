@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Galerie photos — FSCPE",
   description:
     "Des moments de partage, d'apprentissage et de solidarité qui racontent l'action de la Fondation Saran Camara au quotidien.",
+  alternates: { canonical: "/galerie" },
 };
 export const dynamic = "force-dynamic";
 

@@ -30,6 +30,7 @@ export const metadata: Metadata = {
   title: "À propos — Fondation Saran Camara (FSCPE)",
   description:
     "Découvrez l'histoire, la vision, les valeurs fondatrices et l'équipe engagée de la Fondation Saran Camara pour l'Éducation et la Protection des Enfants à Conakry, Guinée.",
+  alternates: { canonical: "/a-propos" },
 };
 
 export const dynamic = "force-dynamic";
