@@ -1,16 +1,11 @@
 "use client";
 
-import type { MouseEvent } from "react";
-import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useLogoTapStore } from "@/lib/store";
 import Image from "next/image";
 
 interface LogoProps {
   className?: string;
   withWordmark?: boolean;
-  /** When true, tapping the mark 5x within 2.5s reveals the admin login. */
-  enableAdminTrigger?: boolean;
 }
 
 /**
@@ -18,25 +13,12 @@ interface LogoProps {
  * inspiré du logo fourni : mains protectrices, silhouette d'enfants,
  * croissants bicolores, étoile — sans reproduire le fichier brut.
  */
-export default function Logo({ className, withWordmark = true, enableAdminTrigger = false }: LogoProps) {
-  const router = useRouter();
-  const registerTap = useLogoTapStore((s) => s.registerTap);
-
-  const handleClick = (event: MouseEvent<HTMLDivElement>) => {
-    if (!enableAdminTrigger) return;
-    const reached = registerTap();
-    if (reached) {
-      event.preventDefault();
-      router.push("/admin/login");
-    }
-  };
-
+export default function Logo({ className, withWordmark = true }: LogoProps) {
   return (
    <div
-  onClick={handleClick}
   className={cn(
     "group flex min-w-0 items-center gap-2.5 select-none",
-    enableAdminTrigger ? "cursor-pointer" : "cursor-default",
+    "cursor-default",
     className
   )}
 >

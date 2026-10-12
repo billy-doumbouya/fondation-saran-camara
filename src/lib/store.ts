@@ -32,7 +32,7 @@ interface LogoTapState {
 }
 
 const TAP_THRESHOLD = 5;
-const TAP_WINDOW_MS = 2500;
+const TAP_WINDOW_MS = 5000;
 let lastTapAt = 0;
 
 export const useLogoTapStore = create<LogoTapState>((set, get) => ({

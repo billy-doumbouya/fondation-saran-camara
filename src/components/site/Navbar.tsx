@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import type { MouseEvent } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { ChevronDown, HeartHandshake } from "lucide-react";
 import { NAV_LINKS } from "@/lib/site-data";
+import { useLogoTapStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import Logo from "./Logo";
 
@@ -14,6 +16,8 @@ export default function Navbar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const registerLogoTap = useLogoTapStore((state) => state.registerTap);
   const reduce = useReducedMotion() ?? false;
 
   // — Scrolled state (condense header) —
@@ -39,6 +43,12 @@ useEffect(() => {
   const isLinkActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
+  const handleLogoClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!registerLogoTap()) return;
+    event.preventDefault();
+    router.push("/admin/login");
+  };
+
   return (
     <>
       <header
@@ -63,8 +73,9 @@ useEffect(() => {
             href="/"
             aria-label="Accueil — FSCPE"
             className="min-w-0 flex-1 lg:flex-none"
+            onClick={handleLogoClick}
           >
-            <Logo enableAdminTrigger />
+            <Logo />
           </Link>
 
           {/* — Desktop nav — */}
